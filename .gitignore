@@ -14,6 +14,8 @@ out/
 *.dump
 *.backup
 *.sql
+!backend/prisma/migrations/**/
+!backend/prisma/migrations/**/migration.sql
 
 uploads/
 storage/
