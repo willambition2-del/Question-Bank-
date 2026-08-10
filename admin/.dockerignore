@@ -1,9 +1,0 @@
-node_modules
-.next
-out
-.env*
-.git
-coverage
-*.log
-Dockerfile
-.dockerignore

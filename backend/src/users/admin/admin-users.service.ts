@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UserRole } from '../../generated/prisma/enums';
+import { Prisma } from '../../generated/prisma/client';
 import { AdminUsersQueryDto } from './dto/admin-users-query.dto';
 
 @Injectable()
