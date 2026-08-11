@@ -3,9 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../app/theme/design_tokens.dart';
-import '../../../core/models/companion_enums.dart';
-import '../../../core/utils/companion_context_resolver.dart';
-import '../../../core/widgets/animated_companion.dart';
+import '../../../app/theme/design_tokens.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../auth/providers/auth_provider.dart';
 
@@ -15,19 +13,9 @@ class OnboardingScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final student = ref.watch(authProvider);
-    final companion = student?.selectedCompanionType ?? CompanionType.male;
-    final isMale = companion == CompanionType.male;
 
-    final titleStr = isMale
-        ? "بنك الأسئلة\nللثالث الثانوي"
-        : "بنك الأسئلة\nلطلاب الثانوية";
-    final subtitleStr = isMale
-        ? "تعلم بذكاء.. وتفوق بثقة"
-        : "تعلم بذكاء.. وحقق نجاحك";
-
-    final welcomeContext = CompanionContextResolver.resolveWelcome(
-      isMale: isMale,
-    );
+    final titleStr = "بنك الأسئلة\nللثالث الثانوي";
+    final subtitleStr = "تعلم بذكاء.. وتفوق بثقة";
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -43,58 +31,7 @@ class OnboardingScreen extends ConsumerWidget {
               children: [
                 const SizedBox(height: AppSpacing.sm),
 
-                // --- GENDER / MODE TOGGLE SWITCH AT TOP ---
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.lightBlue,
-                        borderRadius: BorderRadius.circular(AppRadius.pill),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            isMale ? Icons.face : Icons.face_retouching_natural,
-                            color: AppColors.primaryBlue,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            isMale ? "وضع الطالب 👦" : "وضع الطالبة 👧",
-                            style: AppTypography.caption.copyWith(
-                              color: AppColors.primaryBlue,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        ref
-                            .read(authProvider.notifier)
-                            .updateCompanionType(
-                              isMale
-                                  ? CompanionType.female
-                                  : CompanionType.male,
-                            );
-                      },
-                      child: Text(
-                        isMale ? "تبديل إلى طالبة 👧" : "تبديل إلى طالب 👦",
-                        style: AppTypography.caption.copyWith(
-                          color: AppColors.primaryBlue,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.md),
+                const SizedBox(height: AppSpacing.xl),
 
                 // --- HEADER TITLE & SUBTITLE ---
                 Text(
@@ -111,25 +48,20 @@ class OnboardingScreen extends ConsumerWidget {
                 Text(
                   subtitleStr,
                   style: AppTypography.cardTitle.copyWith(
-                    color: isMale
-                        ? AppColors.primaryBlue
-                        : AppColors.secondaryTeal,
+                    color: AppColors.primaryBlue,
                     fontWeight: FontWeight.bold,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: AppSpacing.md),
 
-                // --- FULL BODY 3D CHARACTER ILLUSTRATION VIA ANIMATED COMPANION ---
+                // --- FULL BODY ILLUSTRATION ---
                 Expanded(
                   child: Center(
-                    child: AnimatedCompanion(
-                      companionType: companion,
-                      emotion: welcomeContext.emotion,
-                      message: welcomeContext.message,
-                      size: CharacterSize.large,
-                      showBubble: true,
-                      blendWhiteBackground: false,
+                    child: Icon(
+                      Icons.school_rounded,
+                      size: 120,
+                      color: AppColors.primaryBlue.withValues(alpha: 0.2),
                     ),
                   ),
                 ),

@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../app/theme/design_tokens.dart';
-import '../models/companion_enums.dart';
-import '../utils/character_asset_resolver.dart';
 
 class AppHeader extends StatelessWidget {
   final String userName;
   final String message;
-  final CompanionType companionType;
   final VoidCallback? onNotificationTap;
   final int? unreadNotifications;
   final String? avatarAsset;
@@ -15,7 +12,6 @@ class AppHeader extends StatelessWidget {
     super.key,
     required this.userName,
     required this.message,
-    this.companionType = CompanionType.male,
     this.onNotificationTap,
     this.unreadNotifications,
     this.avatarAsset,
@@ -23,10 +19,6 @@ class AppHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final resolvedAvatar =
-        avatarAsset ??
-        CharacterAssetResolver.resolveAvatar(type: companionType, index: 1);
-
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: Row(
@@ -107,19 +99,24 @@ class AppHeader extends StatelessWidget {
           const SizedBox(width: AppSpacing.sm),
           // Character Avatar (Unclipped with clean white background)
           Container(
-            width: 46,
-            height: 46,
-            padding: const EdgeInsets.all(3),
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              border: Border.all(color: AppColors.primaryBlue, width: 1.5),
-              boxShadow: const [AppShadows.soft],
+              shape: BoxShape.circle,
+              color: AppColors.primaryBlue.withValues(alpha: 0.1),
+              border: Border.all(color: AppColors.border),
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadius.md - 3),
-              child: Image.asset(resolvedAvatar, fit: BoxFit.contain),
-            ),
+            child: avatarAsset != null
+                ? ClipOval(
+                    child: Image.asset(
+                      avatarAsset!,
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                : const Icon(
+                    Icons.person,
+                    color: AppColors.primaryBlue,
+                  ),
           ),
         ],
       ),

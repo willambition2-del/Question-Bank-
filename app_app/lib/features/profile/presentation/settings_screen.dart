@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/theme/design_tokens.dart';
-import '../../../core/models/companion_enums.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -13,8 +12,6 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final student = ref.watch(authProvider);
-    final companion = student?.selectedCompanionType ?? CompanionType.male;
-
     return AppScaffold(
       appBar: AppBar(
         title: const Text("الإعدادات العامة للتطبيق"),
@@ -30,42 +27,7 @@ class SettingsScreen extends ConsumerWidget {
           children: [
             const SizedBox(height: AppSpacing.sm),
 
-            // --- SECTION 1: CHARACTER & GENDER ---
-            Text("الشخصية التفاعلية والجنس", style: AppTypography.sectionTitle),
-            const SizedBox(height: AppSpacing.xs),
-            AppCard(
-              onTap: () => context.push('/character-customization'),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.face_5_rounded,
-                    color: AppColors.primaryBlue,
-                    size: 24,
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "تخصيص شخصية الطالب والرسوم",
-                          style: AppTypography.cardTitle.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                        Text(
-                          "الشخصية الحالية: ${companion == CompanionType.male ? 'طالب (أحمد 👦)' : 'طالبة (أمل 👧)'}",
-                          style: AppTypography.caption,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Icon(Icons.chevron_left, color: AppColors.border),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
+
 
             // --- SECTION 2: QUIZ & TIMER SETTINGS ---
             Text(
@@ -77,45 +39,7 @@ class SettingsScreen extends ConsumerWidget {
               padding: EdgeInsets.zero,
               child: Column(
                 children: [
-                  ListTile(
-                    title: Text(
-                      "مستوى تأثيرات الحركة (Animations)",
-                      style: AppTypography.cardTitle.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                    subtitle: const Text(
-                      "التحكم بحركات ودخول الشخصيات والبطاقات.",
-                    ),
-                    trailing: DropdownButton<String>(
-                      value: _getMotionLevelString(
-                        student?.motionLevel ?? MotionLevel.full,
-                      ),
-                      items: const [
-                        DropdownMenuItem(
-                          value: 'full',
-                          child: Text("حركة كاملة"),
-                        ),
-                        DropdownMenuItem(
-                          value: 'reduced',
-                          child: Text("حركة خفيفة"),
-                        ),
-                        DropdownMenuItem(
-                          value: 'disabled',
-                          child: Text("إيقاف الحركة"),
-                        ),
-                      ],
-                      onChanged: (val) {
-                        if (val != null) {
-                          ref
-                              .read(authProvider.notifier)
-                              .updateMotionLevel(_getMotionLevelEnum(val));
-                        }
-                      },
-                    ),
-                  ),
-                  const Divider(height: 1),
+
                   SwitchListTile(
                     title: Text(
                       "المؤثرات الصوتية للاختبارات",
@@ -214,26 +138,4 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  String _getMotionLevelString(MotionLevel level) {
-    switch (level) {
-      case MotionLevel.full:
-        return 'full';
-      case MotionLevel.reduced:
-        return 'reduced';
-      case MotionLevel.disabled:
-        return 'disabled';
-    }
-  }
-
-  MotionLevel _getMotionLevelEnum(String levelStr) {
-    switch (levelStr) {
-      case 'full':
-        return MotionLevel.full;
-      case 'reduced':
-        return MotionLevel.reduced;
-      case 'disabled':
-      default:
-        return MotionLevel.disabled;
-    }
-  }
 }

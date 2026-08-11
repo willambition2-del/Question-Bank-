@@ -7,7 +7,6 @@ import '../../../core/widgets/subject_card.dart';
 import '../../../core/widgets/loading_skeleton.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
-import '../../../core/models/companion_enums.dart';
 import '../providers/subjects_provider.dart';
 
 class SubjectsScreen extends ConsumerStatefulWidget {
@@ -482,9 +481,7 @@ class _SubjectsScreenState extends ConsumerState<SubjectsScreen> {
                     if (filteredSubjects.isEmpty) {
                       return const EmptyState(
                         title: "لا توجد مواد مطابقة",
-                        message:
-                            "جرّب تغيير عبارة البحث أو الفلتر المعتمد لمشاهدة جميع المواد المتاحة.",
-                        emotion: CharacterEmotion.thinking,
+                        message: "لا توجد مواد متاحة الآن.",
                       );
                     }
                     return ListView.builder(

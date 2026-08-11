@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/theme/design_tokens.dart';
-import '../../../core/models/companion_enums.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_button.dart';
-import '../../../core/widgets/character_companion.dart';
 import '../providers/auth_provider.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -25,7 +23,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  CompanionType _selectedCompanion = CompanionType.female;
   bool _obscurePassword = true;
   bool _isLoading = false;
 
@@ -67,7 +64,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ? "ثانوية عامة"
               : _schoolController.text.trim(),
           password: _passwordController.text,
-          companionType: _selectedCompanion,
         );
 
     setState(() {
@@ -114,113 +110,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   "انضم إلينا وابدأ المذاكرة بطرق حديثة ومحفزة",
                   style: AppTypography.body,
                   textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: AppSpacing.lg),
-
-                // Companion Selection Widget
-                Text(
-                  "اختر شخصيتك المساعدة",
-                  style: AppTypography.sectionTitle.copyWith(fontSize: 16),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Row(
-                  children: [
-                    // Male companion card
-                    Expanded(
-                      child: AppCard(
-                        onTap: () {
-                          setState(() {
-                            _selectedCompanion = CompanionType.male;
-                          });
-                        },
-                        border: Border.all(
-                          color: _selectedCompanion == CompanionType.male
-                              ? AppColors.primaryBlue
-                              : AppColors.border,
-                          width: _selectedCompanion == CompanionType.male
-                              ? 2
-                              : 1,
-                        ),
-                        backgroundColor:
-                            _selectedCompanion == CompanionType.male
-                            ? AppColors.lightBlue
-                            : AppColors.cardBackground,
-                        child: Column(
-                          children: [
-                            const CharacterCompanion(
-                              companionType: CompanionType.male,
-                              emotion: CharacterEmotion.welcome,
-                              size: CharacterSize.small,
-                              showBubble: false,
-                            ),
-                            const SizedBox(height: AppSpacing.xs),
-                            Text(
-                              "الطالب (وضاح اليمن)",
-                              style: AppTypography.cardTitle.copyWith(
-                                color: _selectedCompanion == CompanionType.male
-                                    ? AppColors.primaryBlue
-                                    : AppColors.darkText,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              "بالثوب والجنبية التقليدية",
-                              style: AppTypography.caption,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-
-                    // Female companion card
-                    Expanded(
-                      child: AppCard(
-                        onTap: () {
-                          setState(() {
-                            _selectedCompanion = CompanionType.female;
-                          });
-                        },
-                        border: Border.all(
-                          color: _selectedCompanion == CompanionType.female
-                              ? AppColors.secondaryTeal
-                              : AppColors.border,
-                          width: _selectedCompanion == CompanionType.female
-                              ? 2
-                              : 1,
-                        ),
-                        backgroundColor:
-                            _selectedCompanion == CompanionType.female
-                            ? AppColors.lightTeal
-                            : AppColors.cardBackground,
-                        child: Column(
-                          children: [
-                            const CharacterCompanion(
-                              companionType: CompanionType.female,
-                              emotion: CharacterEmotion.welcome,
-                              size: CharacterSize.small,
-                              showBubble: false,
-                            ),
-                            const SizedBox(height: AppSpacing.xs),
-                            Text(
-                              "الطالبة (بلقيس)",
-                              style: AppTypography.cardTitle.copyWith(
-                                color:
-                                    _selectedCompanion == CompanionType.female
-                                    ? AppColors.secondaryTeal
-                                    : AppColors.darkText,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              "بالزي المدرسي اليمني",
-                              style: AppTypography.caption,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
                 ),
                 const SizedBox(height: AppSpacing.lg),
 

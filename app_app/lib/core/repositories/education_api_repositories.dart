@@ -91,7 +91,7 @@ final class UnitsApiRepository implements UnitsRepository {
         '/subjects/$subjectId/units',
       );
       return requireList(requireObject(response.data)['data'])
-          .map((item) => _unit(requireObject(item, 'unit')))
+          .map((item) => _unit(Map<String, dynamic>.from(item as Map)))
           .toList(growable: false);
     } on DioException catch (error) {
       throwApiError(error);
@@ -144,7 +144,7 @@ final class LessonsApiRepository implements LessonsRepository {
         '/units/$unitId/lessons',
       );
       return requireList(requireObject(response.data)['data'])
-          .map((item) => _lesson(requireObject(item, 'lesson')))
+          .map((item) => _lesson(Map<String, dynamic>.from(item as Map)))
           .toList(growable: false);
     } on DioException catch (error) {
       throwApiError(error);

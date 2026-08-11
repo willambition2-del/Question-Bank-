@@ -1,6 +1,5 @@
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
-
-import '../models/companion_enums.dart';
 import '../models/student_model.dart';
 import '../network/api_call.dart';
 import '../network/api_response.dart';
@@ -28,6 +27,16 @@ final class AuthApiRepository implements AuthRepository {
 
   @override
   Future<GoogleAuthSession> loginWithGoogle(String idToken) async {
+    if (kDebugMode) {
+      print('Google account selected: YES');
+      print('Google ID token present: ${idToken.isNotEmpty ? "YES" : "NO"}');
+      print('Google ID token length: ${idToken.length}');
+      const clientId = String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID');
+      print('GOOGLE_SERVER_CLIENT_ID present: ${clientId.isNotEmpty ? "YES" : "NO"}');
+      if (clientId.isNotEmpty && clientId.contains('.')) {
+        print('suffix: ${clientId.substring(clientId.indexOf('.'))}');
+      }
+    }
     try {
       final response = await _dio.post<Map<String, dynamic>>(
         '/auth/google',
@@ -40,6 +49,17 @@ final class AuthApiRepository implements AuthRepository {
         isNewUser: json['isNewUser'] == true,
       );
     } on DioException catch (error) {
+      if (kDebugMode) {
+        print('Google backend response:');
+        print('status=${error.response?.statusCode}');
+        final data = error.response?.data;
+        if (data is Map) {
+          print('code=${data["code"]}');
+          print('message=${data["message"]}');
+        } else {
+          print('body=${error.response?.data}');
+        }
+      }
       throwApiError(error);
     }
   }
@@ -51,7 +71,6 @@ final class AuthApiRepository implements AuthRepository {
     required String phone,
     required String schoolName,
     required String password,
-    required CompanionType companionType,
   }) async {
     try {
       final response = await _dio.post<Map<String, dynamic>>(
@@ -62,9 +81,6 @@ final class AuthApiRepository implements AuthRepository {
           if (phone.trim().isNotEmpty) 'phone': phone.trim(),
           if (schoolName.trim().isNotEmpty) 'schoolName': schoolName.trim(),
           'password': password,
-          'companion': companionType == CompanionType.female
-              ? 'FEMALE'
-              : 'MALE',
         },
       );
       return _persistAuthResponse(requireObject(response.data));
@@ -91,27 +107,6 @@ final class AuthApiRepository implements AuthRepository {
       }
       throwApiError(error);
     }
-  }
-
-  @override
-  Future<void> updateCompanion(CompanionType companionType) async {
-    try {
-      await _dio.patch<Map<String, dynamic>>(
-        '/users/me',
-        data: {
-          'companion': companionType == CompanionType.female
-              ? 'FEMALE'
-              : 'MALE',
-        },
-      );
-    } on DioException catch (error) {
-      throwApiError(error);
-    }
-  }
-
-  @override
-  Future<void> updateMotionLevel(MotionLevel motionLevel) async {
-    // Motion preference is intentionally local; the backend has no such field.
   }
 
   @override
@@ -165,11 +160,7 @@ final class AuthApiRepository implements AuthRepository {
       rank: 0,
       streakDays: 0,
       completedQuestions: 0,
-      overallAccuracy: 0,
-      selectedCompanionType: json['companion'] == 'FEMALE'
-          ? CompanionType.female
-          : CompanionType.male,
-      motionLevel: MotionLevel.full,
+      overallAccuracy: (json['overallAccuracy'] as num?)?.toDouble() ?? 0.0,
     );
   }
 }

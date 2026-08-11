@@ -2,11 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/theme/design_tokens.dart';
-import '../../../core/models/companion_enums.dart';
-import '../../../core/utils/character_asset_resolver.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_button.dart';
-import '../../auth/providers/auth_provider.dart';
 import '../../../core/network/challenge_api_models.dart';
 import '../providers/challenge_provider.dart';
 
@@ -15,22 +12,9 @@ class ChallengesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final student = ref.watch(authProvider);
-    final companion = student?.selectedCompanionType ?? CompanionType.male;
-    final isMale = companion == CompanionType.male;
-    final opponentGender = isMale ? CompanionType.female : CompanionType.male;
     final activeChallenges = ref.watch(challengeActiveListProvider);
     final history = ref.watch(challengeHistoryProvider);
     ref.watch(challengeModesProvider);
-
-    final playerAvatar = CharacterAssetResolver.resolveAvatar(
-      type: companion,
-      index: 1,
-    );
-    final opponentAvatar = CharacterAssetResolver.resolveAvatar(
-      type: opponentGender,
-      index: 4,
-    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -83,10 +67,10 @@ class ChallengesScreen extends ConsumerWidget {
                                     ),
                                     color: Colors.white,
                                   ),
-                                  child: Image.asset(
-                                    playerAvatar,
-                                    height: 80,
-                                    fit: BoxFit.contain,
+                                  child: Icon(
+                                    Icons.person,
+                                    size: 60,
+                                    color: AppColors.primaryBlue,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -147,10 +131,10 @@ class ChallengesScreen extends ConsumerWidget {
                                     ),
                                     color: Colors.white,
                                   ),
-                                  child: Image.asset(
-                                    opponentAvatar,
-                                    height: 80,
-                                    fit: BoxFit.contain,
+                                  child: const Icon(
+                                    Icons.person_outline,
+                                    size: 60,
+                                    color: AppColors.goldAccent,
                                   ),
                                 ),
                                 const SizedBox(height: 4),

@@ -36,6 +36,7 @@ class QuizState {
   final bool? revealedCorrectBoolean;
   final String? explanationShort;
   final String? explanationDetailed;
+  final String? selectedOptionWhyWrong;
   final int hearts;
   final int maxHearts;
   final int timerSeconds;
@@ -64,6 +65,7 @@ class QuizState {
     this.revealedCorrectBoolean,
     this.explanationShort,
     this.explanationDetailed,
+    this.selectedOptionWhyWrong,
     this.hearts = -1,
     this.maxHearts = 3,
     this.timerSeconds = -1,
@@ -102,6 +104,7 @@ class QuizState {
     Object? revealedCorrectBoolean = _unset,
     Object? explanationShort = _unset,
     Object? explanationDetailed = _unset,
+    Object? selectedOptionWhyWrong = _unset,
     int? hearts,
     int? maxHearts,
     int? timerSeconds,
@@ -143,6 +146,9 @@ class QuizState {
     explanationDetailed: identical(explanationDetailed, _unset)
         ? this.explanationDetailed
         : explanationDetailed as String?,
+    selectedOptionWhyWrong: identical(selectedOptionWhyWrong, _unset)
+        ? this.selectedOptionWhyWrong
+        : selectedOptionWhyWrong as String?,
     hearts: hearts ?? this.hearts,
     maxHearts: maxHearts ?? this.maxHearts,
     timerSeconds: timerSeconds ?? this.timerSeconds,
@@ -420,6 +426,7 @@ class QuizNotifier extends Notifier<QuizState> {
         revealedCorrectBoolean: response.correctBoolean,
         explanationShort: response.explanationShort,
         explanationDetailed: response.explanationDetailed,
+        selectedOptionWhyWrong: response.selectedOptionWhyWrong,
         hearts: response.heartsRemaining ?? -1,
         correctCount: response.correct,
         wrongCount: response.wrong,
@@ -453,6 +460,7 @@ class QuizNotifier extends Notifier<QuizState> {
       revealedCorrectBoolean: null,
       explanationShort: null,
       explanationDetailed: null,
+      selectedOptionWhyWrong: null,
       hintUsed: false,
       eliminationUsed: false,
       eliminatedOptionIds: const [],

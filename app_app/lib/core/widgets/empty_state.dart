@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../app/theme/design_tokens.dart';
-import '../models/companion_enums.dart';
-import 'character_companion.dart';
 
 class EmptyState extends StatelessWidget {
   final String title;
@@ -9,7 +7,6 @@ class EmptyState extends StatelessWidget {
   final IconData? icon;
   final String? actionLabel;
   final VoidCallback? onActionTap;
-  final CharacterEmotion? emotion;
 
   const EmptyState({
     super.key,
@@ -18,7 +15,6 @@ class EmptyState extends StatelessWidget {
     this.icon,
     this.actionLabel,
     this.onActionTap,
-    this.emotion,
   });
 
   @override
@@ -29,18 +25,11 @@ class EmptyState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (emotion != null)
-              CharacterCompanion(
-                emotion: emotion!,
-                size: CharacterSize.medium,
-                showBubble: false,
-              )
-            else
-              Icon(
-                icon ?? Icons.inbox_outlined,
-                size: 64,
-                color: AppColors.mutedText,
-              ),
+            Icon(
+              icon ?? Icons.inbox_outlined,
+              size: 64,
+              color: AppColors.mutedText,
+            ),
             const SizedBox(height: AppSpacing.md),
             Text(
               title,

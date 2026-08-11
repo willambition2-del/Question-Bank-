@@ -10,7 +10,6 @@ import '../models/leaderboard_entry.dart';
 import '../models/achievement_model.dart';
 import '../models/daily_task_model.dart';
 import '../models/update_model.dart';
-import '../models/companion_enums.dart';
 
 class GoogleAuthSession {
   final StudentModel user;
@@ -28,11 +27,9 @@ abstract interface class AuthRepository {
     required String phone,
     required String schoolName,
     required String password,
-    required CompanionType companionType,
   });
   Future<StudentModel?> getLoggedInStudent();
-  Future<void> updateCompanion(CompanionType companionType);
-  Future<void> updateMotionLevel(MotionLevel motionLevel);
+
   Future<void> updateStudentPointsAndStats(
     int points,
     int completedQuestions,

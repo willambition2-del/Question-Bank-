@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:app_app/app/theme/app_theme.dart';
-import 'package:app_app/core/models/companion_enums.dart';
 import 'package:app_app/core/models/student_model.dart';
 import 'package:app_app/core/repositories/interfaces.dart';
 import 'package:app_app/core/repositories/providers.dart';
@@ -155,8 +154,6 @@ const _widgetStudent = StudentModel(
   streakDays: 0,
   completedQuestions: 0,
   overallAccuracy: 0,
-  selectedCompanionType: CompanionType.male,
-  motionLevel: MotionLevel.full,
 );
 
 final class _WidgetAuthRepository extends Fake implements AuthRepository {

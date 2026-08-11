@@ -3,18 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/design_tokens.dart';
-import '../../../core/models/companion_enums.dart';
-import '../../../core/network/progress_api_models.dart';
-import '../../../core/widgets/app_button.dart';
-import '../../../core/widgets/app_card.dart';
-import '../../../core/widgets/app_chip.dart';
 import '../../../core/widgets/app_scaffold.dart';
-import '../../../core/widgets/character_companion.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../quiz/providers/quiz_provider.dart';
 import '../providers/mistakes_provider.dart';
+import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/app_chip.dart';
+import '../../../core/widgets/app_button.dart';
+import '../../../core/network/progress_api_models.dart';
 
 class MistakesScreen extends ConsumerWidget {
   const MistakesScreen({super.key});
@@ -24,9 +22,6 @@ class MistakesScreen extends ConsumerWidget {
     final state = ref.watch(mistakesNotifierProvider);
     final notifier = ref.read(mistakesNotifierProvider.notifier);
     final records = notifier.getFilteredMistakes();
-    final student = ref.watch(authProvider);
-    final companion = student?.selectedCompanionType ?? CompanionType.male;
-
     return AppScaffold(
       appBar: AppBar(
         title: const Text('مراجعة الأخطاء'),
@@ -39,13 +34,44 @@ class MistakesScreen extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: AppSpacing.xs),
-          CharacterCompanion(
-            companionType: companion,
-            emotion: CharacterEmotion.weaknessReview,
-            message:
-                'الأخطاء فرصتك الذهبية للتعلم والسيطرة على نقاط الضعف قبل الامتحان النهائي!',
-            size: CharacterSize.small,
-            showBubble: true,
+          AppCard(
+            backgroundColor: AppColors.surface,
+            border: Border.all(
+              color: AppColors.primaryBlue.withValues(alpha: 0.3),
+              width: 1.5,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "مراجعة الأخطاء",
+                        style: AppTypography.sectionTitle.copyWith(
+                          color: AppColors.primaryBlue,
+                          fontSize: 15,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "الأخطاء فرصتك الذهبية للتعلم والسيطرة على نقاط الضعف قبل الامتحان النهائي!",
+                        style: AppTypography.caption.copyWith(
+                          color: AppColors.darkText,
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                const Icon(
+                  Icons.error_outline_rounded,
+                  color: AppColors.warmOrange,
+                  size: 48,
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           SingleChildScrollView(
@@ -74,7 +100,6 @@ class MistakesScreen extends ConsumerWidget {
                     title: 'لا توجد أخطاء للمراجعة',
                     message:
                         'ستظهر هنا الأسئلة التي تحتاج إلى مراجعة بعد حل الاختبارات.',
-                    emotion: CharacterEmotion.waiting,
                   );
                 }
                 return ListView.builder(

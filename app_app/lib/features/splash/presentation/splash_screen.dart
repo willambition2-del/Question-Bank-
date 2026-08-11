@@ -6,8 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../app/theme/design_tokens.dart';
-import '../../../core/models/companion_enums.dart';
-import '../../../core/widgets/character_companion.dart';
 import '../../auth/providers/auth_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -104,14 +102,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
             const SizedBox(height: AppSpacing.xxl * 1.5),
 
-            // Character greeting
-            const CharacterCompanion(
-              companionType: CompanionType.female,
-              emotion: CharacterEmotion.welcome,
-              size: CharacterSize.large,
-              showBubble: false,
-              animate: true,
-            ),
+            // Hero Icon
+            const Icon(
+              Icons.school_rounded,
+              size: 120,
+              color: AppColors.primaryBlue,
+            ).animate().scale(delay: 600.ms, duration: 600.ms),
 
             const SizedBox(height: AppSpacing.xxl),
 

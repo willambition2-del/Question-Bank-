@@ -7,6 +7,7 @@ import '../../../core/models/lesson_model.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_scaffold.dart';
+import '../../quiz/providers/quiz_provider.dart';
 import '../../subjects/providers/subject_details_provider.dart';
 
 class UnitDetailsScreen extends ConsumerWidget {
@@ -146,7 +147,7 @@ class UnitDetailsScreen extends ConsumerWidget {
                       physics: const BouncingScrollPhysics(),
                       itemBuilder: (context, index) {
                         final lesson = lessons[index];
-                        return _buildLessonCard(context, lesson);
+                        return _buildLessonCard(context, ref, lesson);
                       },
                     );
                   },
@@ -159,15 +160,62 @@ class UnitDetailsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildLessonCard(BuildContext context, LessonModel lesson) {
+  Widget _buildLessonCard(BuildContext context, WidgetRef ref, LessonModel lesson) {
     final statusConfig = _getLessonStatusConfig(lesson.status);
 
     return AppCard(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      onTap: () {
-        context.push(
-          '/subjects/${lesson.subjectId}/units/${lesson.unitId}/lessons/${lesson.id}',
+      onTap: () async {
+        if (lesson.questionsCount <= 0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("لا توجد أسئلة متاحة لهذا الدرس حالياً")),
+          );
+          return;
+        }
+        
+        // Show loading indicator
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => const Center(child: CircularProgressIndicator()),
         );
+
+        final started = await ref.read(quizNotifierProvider.notifier).startQuiz(
+          subjectId: lesson.subjectId,
+          unitId: lesson.unitId,
+          lessonId: lesson.id,
+          count: lesson.questionsCount,
+          difficulty: "mixed",
+          type: "mixed",
+          useHearts: true,
+          useTimer: false,
+          timerLimitSeconds: 30,
+          timingMode: "none",
+          explanationMode: "afterEach",
+          excludeMastered: false,
+          unansweredOnly: false,
+        );
+        
+        if (!context.mounted) return;
+        Navigator.of(context, rootNavigator: true).pop(); // remove loading dialog
+
+        final current = ref.read(quizNotifierProvider);
+        if (started) {
+          if (current.warningMessage != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(current.warningMessage!)),
+            );
+          }
+          context.push('/quiz');
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                current.errorMessage ?? 'تعذر بدء الاختبار.',
+              ),
+            ),
+          );
+        }
       },
       child: Row(
         children: [

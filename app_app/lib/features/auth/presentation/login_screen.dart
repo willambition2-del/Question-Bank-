@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/theme/design_tokens.dart';
-import '../../../core/models/companion_enums.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_button.dart';
-import '../../../core/widgets/character_companion.dart';
 import '../providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -87,10 +85,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  @override
   Widget build(BuildContext context) {
-    final student = ref.watch(authProvider);
-    final companion = student?.selectedCompanionType ?? CompanionType.male;
 
     return AppScaffold(
       body: Center(
@@ -103,24 +98,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const SizedBox(height: AppSpacing.md),
-                  // Character Greeting
-                  Container(
-                    padding: const EdgeInsets.all(AppSpacing.xs),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(AppRadius.lg),
-                      boxShadow: const [AppShadows.soft],
-                    ),
-                    child: CharacterCompanion(
-                      companionType: companion,
-                      emotion: CharacterEmotion.welcome,
-                      message:
-                          "مرحباً بك مجدداً! أدخل بياناتك لنبدأ رحلة التفوق معاً.",
-                      size: CharacterSize.medium,
-                      customHeight: 125,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
 
                   Text(
                     "تسجيل الدخول",

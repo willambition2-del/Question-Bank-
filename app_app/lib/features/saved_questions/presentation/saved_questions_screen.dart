@@ -3,13 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/design_tokens.dart';
-import '../../../core/models/companion_enums.dart';
 import '../../../core/network/progress_api_models.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_chip.dart';
 import '../../../core/widgets/app_scaffold.dart';
-import '../../../core/widgets/character_companion.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -24,9 +22,6 @@ class SavedQuestionsScreen extends ConsumerWidget {
     final state = ref.watch(savedQuestionsNotifierProvider);
     final notifier = ref.read(savedQuestionsNotifierProvider.notifier);
     final records = notifier.getFilteredSavedQuestions();
-    final student = ref.watch(authProvider);
-    final companion = student?.selectedCompanionType ?? CompanionType.male;
-
     return AppScaffold(
       appBar: AppBar(
         title: const Text('الأسئلة المحفوظة للمراجعة'),
@@ -68,11 +63,10 @@ class SavedQuestionsScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
-                CharacterCompanion(
-                  companionType: companion,
-                  emotion: CharacterEmotion.hint,
-                  size: CharacterSize.small,
-                  showBubble: false,
+                const Icon(
+                  Icons.bookmark_added_rounded,
+                  size: 48,
+                  color: AppColors.secondaryTeal,
                 ),
               ],
             ),
@@ -140,7 +134,6 @@ class SavedQuestionsScreen extends ConsumerWidget {
                     title: 'لا توجد أسئلة محفوظة',
                     message:
                         'اضغط على زر حفظ السؤال أثناء الاختبار لتجده هنا لاحقًا.',
-                    emotion: CharacterEmotion.waiting,
                   );
                 }
                 return ListView.builder(

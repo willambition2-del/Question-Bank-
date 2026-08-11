@@ -141,7 +141,7 @@ class _ExamModelsScreenState extends ConsumerState<ExamModelsScreen> {
               Container(
                 padding: const EdgeInsets.all(AppSpacing.xs),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryBlue.withOpacity(0.12),
+                  color: AppColors.primaryBlue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppRadius.sm),
                 ),
                 child: const Icon(

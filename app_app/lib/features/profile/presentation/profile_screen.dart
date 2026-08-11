@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/theme/design_tokens.dart';
-import '../../../core/models/companion_enums.dart';
-import '../../../core/utils/character_asset_resolver.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/repositories/providers.dart';
@@ -19,9 +17,6 @@ class ProfileScreen extends ConsumerWidget {
     final dashboard = ref.watch(homeDashboardProvider);
     final overview = dashboard.overview.value;
     final pointsProfile = dashboard.points.value;
-    final companion = student?.selectedCompanionType ?? CompanionType.male;
-    final isMale = companion == CompanionType.male;
-    final avatar = CharacterAssetResolver.resolveAvatar(type: companion);
     final name = student?.name ?? 'الطالب';
     final phone = student?.phone.isNotEmpty == true ? student!.phone : '—';
     final points = pointsProfile?.currentPoints ?? overview?.totalPoints;
@@ -61,7 +56,7 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(AppRadius.md - 4),
-                        child: Image.asset(avatar, fit: BoxFit.contain),
+                        child: const Icon(Icons.person, color: AppColors.primaryBlue, size: 40),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.md),
@@ -102,55 +97,6 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                     ),
                   ],
-                ),
-                const SizedBox(height: AppSpacing.md),
-
-                // Companion Customization Quick Card
-                GestureDetector(
-                  onTap: () => context.push('/character-customization'),
-                  child: Container(
-                    padding: const EdgeInsets.all(AppSpacing.sm),
-                    decoration: BoxDecoration(
-                      color: AppColors.lightBlue,
-                      borderRadius: BorderRadius.circular(AppRadius.md),
-                      border: Border.all(
-                        color: AppColors.primaryBlue.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.face_rounded,
-                          color: AppColors.primaryBlue,
-                          size: 24,
-                        ),
-                        const SizedBox(width: AppSpacing.xs),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "الشخصية المرافقة: ${isMale ? "طالب يمني" : "طالبة يمنية"}",
-                                style: AppTypography.cardTitle.copyWith(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const Text(
-                                "تغيير نوع الشخصية أو تعبيرات التفاعل",
-                                style: TextStyle(fontSize: 10),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Icon(
-                          Icons.arrow_forward_ios_rounded,
-                          size: 14,
-                          color: AppColors.primaryBlue,
-                        ),
-                      ],
-                    ),
-                  ),
                 ),
               ],
             ),

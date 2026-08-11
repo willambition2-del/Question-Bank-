@@ -3,12 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/theme/design_tokens.dart';
 import '../../../app/router/tab_index_provider.dart';
-import '../../../core/models/companion_enums.dart';
-import '../../../core/utils/companion_context_resolver.dart';
+import '../../../app/router/tab_index_provider.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_header.dart';
 import '../../../core/widgets/stat_card.dart';
-import '../../../core/widgets/animated_companion.dart';
+import '../../../core/widgets/stat_card.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/home_dashboard_provider.dart';
 import '../../notifications/providers/notifications_provider.dart';
@@ -26,8 +25,6 @@ class HomeScreen extends ConsumerWidget {
     final pointsProfile = dashboard.points.value;
     final tasks = dashboard.dailyTasks.value ?? const [];
     final recommendations = dashboard.recommendations.value;
-    final companion = student?.selectedCompanionType ?? CompanionType.male;
-    final isMale = companion == CompanionType.male;
     final userName = student?.name ?? 'الطالب';
     final points = pointsProfile?.currentPoints ?? overview?.totalPoints;
     final level = pointsProfile?.currentLevel ?? overview?.level;
@@ -38,14 +35,6 @@ class HomeScreen extends ConsumerWidget {
     final dailyTask = tasks.isEmpty ? null : tasks.first;
     final recommendedLesson = recommendations?.lessons.firstOrNull;
 
-    final headerContext = CompanionContextResolver.resolveHomeHeader(
-      userName: userName,
-      isMale: isMale,
-    );
-    final motivationContext = CompanionContextResolver.resolveHomeMotivation(
-      isMale: isMale,
-      remainingLessons: recommendations?.lessons.length ?? 0,
-    );
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -55,8 +44,7 @@ class HomeScreen extends ConsumerWidget {
           // 1. Header
           AppHeader(
             userName: userName,
-            message: headerContext.message,
-            companionType: companion,
+            message: "مرحباً بك مجدداً! جاهز للتحدي اليوم؟",
             unreadNotifications: unreadNotifications,
             onNotificationTap: () => context.push('/notifications'),
           ),
@@ -78,9 +66,7 @@ class HomeScreen extends ConsumerWidget {
                         strokeWidth: 5,
                         backgroundColor: AppColors.border,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          isMale
-                              ? AppColors.primaryBlue
-                              : AppColors.secondaryTeal,
+                          AppColors.primaryBlue,
                         ),
                       ),
                       Text(
@@ -159,13 +145,11 @@ class HomeScreen extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.md),
 
-          // 3. Character Motivation Banner
+          // 3. Motivation Banner
           AppCard(
             backgroundColor: AppColors.surface,
             border: Border.all(
-              color: isMale
-                  ? AppColors.primaryBlue.withValues(alpha: 0.3)
-                  : AppColors.secondaryTeal.withValues(alpha: 0.3),
+              color: AppColors.primaryBlue.withValues(alpha: 0.3),
               width: 1.5,
             ),
             child: Row(
@@ -175,19 +159,15 @@ class HomeScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        isMale
-                            ? "أنت على الطريق الصحيح يا بطل!"
-                            : "أنتِ على الطريق الصحيح يا متفوقة!",
+                        "أنت على الطريق الصحيح!",
                         style: AppTypography.sectionTitle.copyWith(
-                          color: isMale
-                              ? AppColors.primaryBlue
-                              : AppColors.secondaryTeal,
+                          color: AppColors.primaryBlue,
                           fontSize: 15,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        motivationContext.message,
+                        "استمر في تقديم أفضل ما لديك. اختبر معلوماتك وطور مستواك عبر المزيد من التحديات.",
                         style: AppTypography.caption.copyWith(
                           color: AppColors.darkText,
                           height: 1.4,
@@ -205,9 +185,7 @@ class HomeScreen extends ConsumerWidget {
                           }
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: isMale
-                              ? AppColors.primaryBlue
-                              : AppColors.secondaryTeal,
+                          backgroundColor: AppColors.primaryBlue,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -230,12 +208,10 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: AppSpacing.xs),
-                AnimatedCompanion(
-                  companionType: companion,
-                  emotion: motivationContext.emotion,
-                  customHeight: 110,
-                  showBubble: false,
-                  blendWhiteBackground: true,
+                const Icon(
+                  Icons.stars_rounded,
+                  color: AppColors.goldAccent,
+                  size: 64,
                 ),
               ],
             ),
@@ -318,9 +294,7 @@ class HomeScreen extends ConsumerWidget {
                       ? '—'
                       : '${overview.masteryPercent.toStringAsFixed(0)}%',
                   label: "نسبة الإنجاز",
-                  color: isMale
-                      ? AppColors.primaryBlue
-                      : AppColors.secondaryTeal,
+                  color: AppColors.primaryBlue,
                   icon: Icons.pie_chart_rounded,
                 ),
               ),

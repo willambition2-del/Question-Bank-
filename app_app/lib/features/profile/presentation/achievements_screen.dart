@@ -4,12 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:confetti/confetti.dart';
 import '../../../app/theme/design_tokens.dart';
 import '../../../core/models/achievement_model.dart';
-import '../../../core/utils/achievement_asset_resolver.dart';
-import '../../../core/models/companion_enums.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_chip.dart';
-import '../../../core/widgets/character_companion.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/repositories/providers.dart';
 
@@ -27,8 +24,6 @@ class AchievementsScreen extends ConsumerStatefulWidget {
 class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
   late ConfettiController _confettiController;
   String _activeTab = "all"; // 'all', 'earned', 'unearned', 'rare', 'daily'
-  AchievementModel? _selectedAchievementForCelebration;
-
   @override
   void initState() {
     super.initState();
@@ -123,7 +118,6 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
                       return const EmptyState(
                         title: "لا توجد أوسمة بهذه الفئة",
                         message: "واصل حل الاختبارات لتفتح هذا القسم قريباً!",
-                        emotion: CharacterEmotion.waiting,
                       );
                     }
                     return GridView.builder(
@@ -161,20 +155,6 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
               Colors.purple,
             ],
           ),
-
-          // Character Celebration Overlay
-          if (_selectedAchievementForCelebration != null)
-            CharacterReactionOverlay(
-              emotion: CharacterEmotion.achievement,
-              title:
-                  "وسام فتح جديد: ${_selectedAchievementForCelebration!.title} 🎉",
-              subtitle: _selectedAchievementForCelebration!.description,
-              onClose: () {
-                setState(() {
-                  _selectedAchievementForCelebration = null;
-                });
-              },
-            ),
         ],
       ),
     );
@@ -208,9 +188,19 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
         if (ach.isUnlocked) {
           _confettiController.stop();
           _confettiController.play();
-          setState(() {
-            _selectedAchievementForCelebration = ach;
-          });
+          showDialog(
+            context: context,
+            builder: (_) => AlertDialog(
+              title: Text("وسام: ${ach.title} 🎉"),
+              content: Text(ach.description),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text("إغلاق"),
+                ),
+              ],
+            ),
+          );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -241,7 +231,7 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  AchievementAssetResolver.iconFor(ach.badgeIcon),
+                  Icons.stars_rounded,
                   color: ach.isUnlocked
                       ? AppColors.goldAccent
                       : AppColors.mutedText,

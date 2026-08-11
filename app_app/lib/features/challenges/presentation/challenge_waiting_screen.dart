@@ -2,14 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/theme/design_tokens.dart';
-import '../../../core/models/companion_enums.dart';
-import '../../../core/network/challenge_api_models.dart';
-import '../../../core/utils/character_asset_resolver.dart';
-import '../../../core/utils/companion_context_resolver.dart';
-import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_scaffold.dart';
-import '../../../core/widgets/animated_companion.dart';
+import '../../../core/widgets/app_card.dart';
+import '../../../core/network/challenge_api_models.dart';
 import '../providers/challenge_provider.dart';
 import '../providers/team_challenge_provider.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -56,15 +52,11 @@ class _ChallengeWaitingScreenState
 
   @override
   Widget build(BuildContext context) {
-    final student = ref.watch(authProvider);
-    final companion = student?.selectedCompanionType ?? CompanionType.male;
-    final isMale = companion == CompanionType.male;
-    final opponentGender = isMale ? CompanionType.female : CompanionType.male;
     final isTeamMode = widget.mode == 'twoVsTwo';
 
     if (isTeamMode) {
       final teamState = ref.watch(teamChallengeNotifierProvider);
-      return _buildTeamLobby(context, teamState, companion);
+      return _buildTeamLobby(context, teamState);
     }
 
     final challengeState = ref.watch(challengeProvider);
@@ -74,36 +66,35 @@ class _ChallengeWaitingScreenState
         if (mounted) context.push('/challenges/live');
       });
     }
-
-    final playerAvatar = CharacterAssetResolver.resolveAvatar(
-      type: companion,
-      index: 1,
-    );
-    final opponentAvatar = CharacterAssetResolver.resolveAvatar(
-      type: opponentGender,
-      index: 4,
-    );
-
-    final searchingContext = CompanionContextResolver.resolveChallengeLobby(
-      isSearching: true,
-      isMale: isMale,
-    );
-    final countdownContext = CompanionContextResolver.resolveChallengeLobby(
-      isSearching: false,
-      isMale: isMale,
-    );
-
     return AppScaffold(
+      appBar: AppBar(
+        title: const Text("المواجهة"),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            ref.read(challengeProvider.notifier).exitMatch();
+            context.pop();
+          },
+        ),
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (challengeState.status == 'searching') ...[
-              AnimatedCompanion(
-                companionType: companion,
-                emotion: searchingContext.emotion,
-                message: searchingContext.message,
-                size: CharacterSize.medium,
+              const Icon(
+                Icons.search,
+                size: 64,
+                color: AppColors.primaryBlue,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              const Text(
+                "جاري البحث عن منافس...",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primaryBlue,
+                ),
               ),
               const SizedBox(height: AppSpacing.xl),
               const CircularProgressIndicator(color: AppColors.primaryBlue),
@@ -117,11 +108,19 @@ class _ChallengeWaitingScreenState
                 },
               ),
             ] else if (challengeState.status == 'countdown') ...[
-              AnimatedCompanion(
-                companionType: companion,
-                emotion: CharacterEmotion.challengeExcited,
-                message: countdownContext.message,
-                size: CharacterSize.small,
+              const Icon(
+                Icons.emoji_events,
+                size: 64,
+                color: AppColors.goldAccent,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              const Text(
+                "استعد للمواجهة!",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.goldAccent,
+                ),
               ),
               const SizedBox(height: AppSpacing.lg),
               AppCard(
@@ -131,7 +130,6 @@ class _ChallengeWaitingScreenState
                     _buildPlayerSlot(
                       "أنت",
                       "المستوى 12",
-                      playerAvatar,
                       AppColors.primaryBlue,
                       "جاهز",
                     ),
@@ -146,7 +144,6 @@ class _ChallengeWaitingScreenState
                     _buildPlayerSlot(
                       challengeState.opponent?.name ?? "منافس",
                       "المستوى 11",
-                      opponentAvatar,
                       AppColors.goldAccent,
                       "جاهز",
                     ),
@@ -169,7 +166,6 @@ class _ChallengeWaitingScreenState
   Widget _buildTeamLobby(
     BuildContext context,
     TeamChallengeState teamState,
-    CompanionType companion,
   ) {
     return AppScaffold(
       appBar: AppBar(
@@ -243,7 +239,7 @@ class _ChallengeWaitingScreenState
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       ...teamState.blueTeam.map(
-                        (p) => _buildPlayerStatusTile(p, companion),
+                        (p) => _buildPlayerStatusTile(p),
                       ),
                     ],
                   ),
@@ -263,7 +259,7 @@ class _ChallengeWaitingScreenState
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       ...teamState.goldTeam.map(
-                        (p) => _buildPlayerStatusTile(p, companion),
+                        (p) => _buildPlayerStatusTile(p),
                       ),
                     ],
                   ),
@@ -297,7 +293,6 @@ class _ChallengeWaitingScreenState
   Widget _buildPlayerSlot(
     String name,
     String level,
-    String avatar,
     Color color,
     String status,
   ) {
@@ -315,7 +310,7 @@ class _ChallengeWaitingScreenState
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(AppRadius.md - 3),
-            child: Image.asset(avatar, fit: BoxFit.contain),
+            child: Icon(Icons.person, color: color, size: 40),
           ),
         ),
         const SizedBox(height: 4),
@@ -347,12 +342,7 @@ class _ChallengeWaitingScreenState
     );
   }
 
-  Widget _buildPlayerStatusTile(TeamPlayer p, CompanionType companion) {
-    final avatar = CharacterAssetResolver.resolveAvatar(
-      type: companion,
-      index: 1,
-    );
-
+  Widget _buildPlayerStatusTile(TeamPlayer p) {
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.xs),
       padding: const EdgeInsets.all(6),
@@ -373,7 +363,7 @@ class _ChallengeWaitingScreenState
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(AppRadius.sm - 2),
-              child: Image.asset(avatar, fit: BoxFit.contain),
+              child: const Icon(Icons.person, color: AppColors.primaryBlue, size: 20),
             ),
           ),
           const SizedBox(width: 6),

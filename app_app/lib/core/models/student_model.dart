@@ -1,5 +1,3 @@
-import 'companion_enums.dart';
-
 class StudentModel {
   final String id;
   final String name;
@@ -13,8 +11,6 @@ class StudentModel {
   final int streakDays;
   final int completedQuestions;
   final double overallAccuracy;
-  final CompanionType selectedCompanionType;
-  final MotionLevel motionLevel;
   final bool soundsEnabled;
   final bool hapticsEnabled;
 
@@ -31,8 +27,6 @@ class StudentModel {
     required this.streakDays,
     required this.completedQuestions,
     required this.overallAccuracy,
-    required this.selectedCompanionType,
-    required this.motionLevel,
     this.soundsEnabled = true,
     this.hapticsEnabled = true,
   });
@@ -50,8 +44,6 @@ class StudentModel {
     int? streakDays,
     int? completedQuestions,
     double? overallAccuracy,
-    CompanionType? selectedCompanionType,
-    MotionLevel? motionLevel,
     bool? soundsEnabled,
     bool? hapticsEnabled,
   }) {
@@ -68,9 +60,6 @@ class StudentModel {
       streakDays: streakDays ?? this.streakDays,
       completedQuestions: completedQuestions ?? this.completedQuestions,
       overallAccuracy: overallAccuracy ?? this.overallAccuracy,
-      selectedCompanionType:
-          selectedCompanionType ?? this.selectedCompanionType,
-      motionLevel: motionLevel ?? this.motionLevel,
       soundsEnabled: soundsEnabled ?? this.soundsEnabled,
       hapticsEnabled: hapticsEnabled ?? this.hapticsEnabled,
     );

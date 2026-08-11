@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/student_model.dart';
 import '../../../core/errors/api_exception.dart';
-import '../../../core/models/companion_enums.dart';
 import '../../../core/repositories/providers.dart';
 import '../services/google_sign_in_service.dart';
 
@@ -197,7 +196,6 @@ class AuthNotifier extends Notifier<StudentModel?> {
     required String phone,
     required String schoolName,
     required String password,
-    required CompanionType companionType,
   }) async {
     try {
       final user = await ref
@@ -208,7 +206,6 @@ class AuthNotifier extends Notifier<StudentModel?> {
             phone: phone,
             schoolName: schoolName,
             password: password,
-            companionType: companionType,
           );
       if (user != null) {
         state = user;
@@ -225,19 +222,7 @@ class AuthNotifier extends Notifier<StudentModel?> {
     return false;
   }
 
-  Future<void> updateCompanionType(CompanionType companionType) async {
-    if (state != null) {
-      await ref.read(authRepositoryProvider).updateCompanion(companionType);
-      state = state!.copyWith(selectedCompanionType: companionType);
-    }
-  }
 
-  Future<void> updateMotionLevel(MotionLevel motionLevel) async {
-    if (state != null) {
-      await ref.read(authRepositoryProvider).updateMotionLevel(motionLevel);
-      state = state!.copyWith(motionLevel: motionLevel);
-    }
-  }
 
   Future<void> updateSoundsEnabled(bool enabled) async {
     if (state != null) {

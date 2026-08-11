@@ -63,7 +63,14 @@ class _SubjectDetailsScreenState extends ConsumerState<SubjectDetailsScreen>
           if (subject == null) {
             return const Center(child: Text("المادة غير موجودة"));
           }
-          final subjectColor = Color(int.parse("0xFF${subject.colorHex}"));
+          Color subjectColor = AppColors.primaryBlue;
+          try {
+            var hex = subject.colorHex.trim().toUpperCase().replaceAll('#', '').replaceAll('0X', '');
+            if (hex.length == 6) hex = 'FF$hex';
+            subjectColor = Color(int.parse(hex, radix: 16));
+          } catch (e) {
+            debugPrint('Invalid subject color: ${subject.colorHex}');
+          }
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,

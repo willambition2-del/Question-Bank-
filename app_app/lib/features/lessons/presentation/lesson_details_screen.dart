@@ -3,13 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/theme/design_tokens.dart';
 import '../../../core/models/lesson_model.dart';
-import '../../../core/models/companion_enums.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_scaffold.dart';
-import '../../../core/widgets/character_companion.dart';
 import '../../subjects/providers/subject_details_provider.dart';
-import '../../auth/providers/auth_provider.dart';
 
 class LessonDetailsScreen extends ConsumerWidget {
   final String lessonId;
@@ -19,8 +16,6 @@ class LessonDetailsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final lessonAsync = ref.watch(lessonDetailsProvider(lessonId));
-    final student = ref.watch(authProvider);
-    final companion = student?.selectedCompanionType ?? CompanionType.male;
 
     return lessonAsync.when(
       loading: () =>
@@ -88,23 +83,6 @@ class LessonDetailsScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
-
-                // --- COMPANION SPEECH BUBBLE & SUGGESTION ---
-                CharacterCompanion(
-                  companionType: companion,
-                  emotion: CharacterEmotion.hint,
-                  message:
-                      "أنصحك بمراجعة النقاط الأساسية بالأسفل وحل أخطائك السابقة قبل بدء اختبار الدرس الجديد! 💡",
-                  size: CharacterSize.small,
-                  showBubble: true,
-                ),
-                const SizedBox(height: AppSpacing.md),
-
-                Text(
-                  "إعداد اختبار الدرس المخصص",
-                  style: AppTypography.sectionTitle,
-                ),
-                const SizedBox(height: AppSpacing.sm),
 
                 // --- TEST BUTTONS GRID ---
                 Row(

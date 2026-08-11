@@ -3,11 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../app/theme/design_tokens.dart';
-import '../../../core/models/companion_enums.dart';
-import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/app_chip.dart';
 import '../../../core/widgets/app_scaffold.dart';
-import '../../../core/widgets/character_companion.dart';
 import '../providers/challenge_provider.dart';
 import '../../auth/providers/auth_provider.dart';
 
@@ -60,8 +59,6 @@ class ChallengeLiveScreen extends ConsumerWidget {
     final state = ref.watch(challengeProvider);
     final notifier = ref.read(challengeProvider.notifier);
     final student = ref.watch(authProvider);
-    final companion = student?.selectedCompanionType ?? CompanionType.male;
-
     final currentQ = state.currentQuestion;
 
     // --- COMPLETED STATE OVERLAY ---
@@ -69,21 +66,24 @@ class ChallengeLiveScreen extends ConsumerWidget {
       final playerWon = state.playerScore >= state.opponentScore;
       final isDraw = state.playerScore == state.opponentScore;
 
-      CharacterEmotion endEmotion = CharacterEmotion.victory;
+      IconData endIcon = Icons.emoji_events;
       String endGreeting = "أنت الفائز البطل! 🏆";
       Color endColor = AppColors.successGreen;
       Color endLightColor = AppColors.lightTeal;
+      String endMessage = "مبارك الفوز الرائع! أثبتَّ سرعة استجابتك ودقتك وحصلت على +50 نقطة مكافأة.";
 
       if (isDraw) {
-        endEmotion = CharacterEmotion.neutral;
+        endIcon = Icons.handshake;
         endGreeting = "تعادل حماسي! 🤝";
         endColor = AppColors.primaryBlue;
         endLightColor = AppColors.lightBlue;
+        endMessage = "مباراة متكافئة وقوية جداً. منافسك كان نداً قوياً!";
       } else if (!playerWon) {
-        endEmotion = CharacterEmotion.defeatSportsmanship;
+        endIcon = Icons.sentiment_dissatisfied;
         endGreeting = "معوض خير يا بطل! 👏";
         endColor = AppColors.errorCoral;
         endLightColor = AppColors.lightError;
+        endMessage = "خسارة بروح رياضية! راجع أخطاءك وستنتصر في المرة القادمة.";
       }
 
       return PopScope(
@@ -105,15 +105,16 @@ class ChallengeLiveScreen extends ConsumerWidget {
                     border: Border.all(color: endColor.withValues(alpha: 0.2)),
                     child: Column(
                       children: [
-                        CharacterCompanion(
-                          companionType: companion,
-                          emotion: endEmotion,
-                          message: playerWon && !isDraw
-                              ? "مبارك الفوز الرائع! أثبتَّ سرعة استجابتك ودقتك وحصلت على +50 نقطة مكافأة."
-                              : isDraw
-                              ? "مباراة متكافئة وقوية جداً. منافسك كان نداً قوياً!"
-                              : "خسارة بروح رياضية! راجع أخطاءك وستنتصر في المرة القادمة.",
-                          size: CharacterSize.medium,
+                        Icon(
+                          endIcon,
+                          size: 64,
+                          color: endColor,
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          endMessage,
+                          style: AppTypography.body,
+                          textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: AppSpacing.md),
                         Text(

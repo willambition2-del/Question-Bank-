@@ -9,6 +9,7 @@ final class QuizQuestion {
   final String type;
   final String difficulty;
   final String questionText;
+  final String? hintText;
   final Map<String, String> options;
   final ReadingPassage? readingPassage;
   final bool isTrapQuestion;
@@ -24,6 +25,7 @@ final class QuizQuestion {
     required this.type,
     required this.difficulty,
     required this.questionText,
+    this.hintText,
     required this.options,
     this.readingPassage,
     required this.isTrapQuestion,
@@ -66,6 +68,7 @@ final class QuizQuestion {
       type: type,
       difficulty: json['difficulty']?.toString() ?? 'MEDIUM',
       questionText: json['questionText']?.toString() ?? '',
+      hintText: json['hintText']?.toString(),
       options: Map.unmodifiable(options),
       readingPassage: passage,
       isTrapQuestion: json['isTrapQuestion'] == true,
@@ -236,6 +239,7 @@ final class QuizAnswerResponse {
   final bool? correctBoolean;
   final String? explanationShort;
   final String? explanationDetailed;
+  final String? selectedOptionWhyWrong;
   final int pointsEarned;
   final int attemptPoints;
   final int answered;
@@ -252,6 +256,7 @@ final class QuizAnswerResponse {
     this.correctBoolean,
     this.explanationShort,
     this.explanationDetailed,
+    this.selectedOptionWhyWrong,
     required this.pointsEarned,
     required this.attemptPoints,
     required this.answered,
@@ -278,6 +283,7 @@ final class QuizAnswerResponse {
       correctBoolean: answer['value'] as bool?,
       explanationShort: explanation['short']?.toString(),
       explanationDetailed: explanation['detailed']?.toString(),
+      selectedOptionWhyWrong: explanation['selectedOptionWhyWrong']?.toString(),
       pointsEarned: (score['pointsEarned'] as num?)?.toInt() ?? 0,
       attemptPoints: (score['attemptPoints'] as num?)?.toInt() ?? 0,
       answered: (progress['answered'] as num?)?.toInt() ?? 0,

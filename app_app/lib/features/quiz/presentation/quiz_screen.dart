@@ -2,14 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/theme/design_tokens.dart';
-import '../../../core/models/companion_enums.dart';
-import '../../../core/controllers/companion_event_controller.dart';
 import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_button.dart';
-import '../../../core/widgets/animated_companion.dart';
 import '../providers/quiz_provider.dart';
-import '../../auth/providers/auth_provider.dart';
 
 class QuizScreen extends ConsumerWidget {
   const QuizScreen({super.key});
@@ -55,68 +51,10 @@ class QuizScreen extends ConsumerWidget {
     );
   }
 
-  CompanionEventResult _resolveQuizEvent(
-    QuizState state,
-    bool isMale,
-    String userName,
-  ) {
-    switch (state.status) {
-      case QuizQuestionStatus.submittedCorrect:
-        return CompanionEventController.handleEvent(
-          event: CompanionEventType.USER_CORRECT_ANSWER,
-          isMale: isMale,
-          userName: userName,
-        );
-      case QuizQuestionStatus.submittedWrong:
-        return CompanionEventController.handleEvent(
-          event: CompanionEventType.USER_WRONG_ANSWER,
-          isMale: isMale,
-          userName: userName,
-        );
-      case QuizQuestionStatus.submittedHidden:
-        return CompanionEventController.handleEvent(
-          event: CompanionEventType.USER_SELECT_OPTION,
-          isMale: isMale,
-          userName: userName,
-        );
-      case QuizQuestionStatus.timedOut:
-        return CompanionEventController.handleEvent(
-          event: CompanionEventType.USER_TIMEOUT,
-          isMale: isMale,
-          userName: userName,
-        );
-      case QuizQuestionStatus.showingExplanation:
-        return CompanionEventController.handleEvent(
-          event: CompanionEventType.USER_REQUEST_HINT,
-          isMale: isMale,
-          userName: userName,
-        );
-      case QuizQuestionStatus.selected:
-        return CompanionEventController.handleEvent(
-          event: CompanionEventType.USER_SELECT_OPTION,
-          isMale: isMale,
-          userName: userName,
-        );
-      default:
-        final remaining = state.questions.length - state.currentIndex;
-        return CompanionEventController.handleEvent(
-          event: CompanionEventType.USER_START_QUIZ,
-          isMale: isMale,
-          userName: userName,
-          remainingQuestions: remaining,
-        );
-    }
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final quizState = ref.watch(quizNotifierProvider);
     final quizNotifier = ref.read(quizNotifierProvider.notifier);
-    final student = ref.watch(authProvider);
-    final companion = student?.selectedCompanionType ?? CompanionType.male;
-    final isMale = companion == CompanionType.male;
-    final userName = student?.name ?? (isMale ? "أحمد" : "أمل");
-
     final currentQ = quizState.currentQuestion;
     if (quizState.status == QuizQuestionStatus.completed) {
       Future.microtask(() {
@@ -144,15 +82,11 @@ class QuizScreen extends ConsumerWidget {
     final isAnswered =
         quizState.status == QuizQuestionStatus.submittedCorrect ||
         quizState.status == QuizQuestionStatus.submittedWrong ||
-        quizState.status == QuizQuestionStatus.submittedHidden ||
-        quizState.status == QuizQuestionStatus.timedOut ||
-        quizState.status == QuizQuestionStatus.showingExplanation;
+        quizState.status == QuizQuestionStatus.timedOut;
 
     final progressVal = quizState.questions.isNotEmpty
         ? (quizState.currentIndex + 1) / quizState.questions.length
         : 0.0;
-
-    final eventResult = _resolveQuizEvent(quizState, isMale, userName);
 
     return PopScope(
       canPop: false,
@@ -254,6 +188,18 @@ class QuizScreen extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.lightBlue,
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                  ),
+                  child: Text(
+                    currentQ.difficulty == 'EASY' ? "🌟 سهل" : currentQ.difficulty == 'HARD' ? "🔥 صعب" : "⭐ متوسط",
+                    style: AppTypography.caption.copyWith(color: AppColors.primaryBlue, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
                 if (currentQ.isTrickQuestion)
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -274,12 +220,24 @@ class QuizScreen extends ConsumerWidget {
                   ),
                 if (quizState.attempt?.hintsEnabled == true &&
                     !isAnswered &&
-                    !quizState.hintUsed)
+                    !quizState.hintUsed &&
+                    currentQ.hintText != null &&
+                    currentQ.hintText!.isNotEmpty)
                   TextButton.icon(
                     onPressed: () {
                       quizNotifier.useHint();
-                      context.push(
-                        '/assistant?questionId=${currentQ.id}&attemptId=${quizState.attempt!.id}&action=hint',
+                      showDialog(
+                        context: context,
+                        builder: (_) => AlertDialog(
+                          title: const Text('تلميح 💡'),
+                          content: Text(currentQ.hintText!),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('حسناً'),
+                            ),
+                          ],
+                        ),
                       );
                     },
                     icon: const Icon(Icons.lightbulb_outline_rounded, size: 17),
@@ -447,23 +405,29 @@ class QuizScreen extends ConsumerWidget {
                                     : null,
                               ),
                               const SizedBox(width: AppSpacing.md),
-                              Text(
-                                "$optionId) ",
-                                style: AppTypography.cardTitle.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.secondaryText,
-                                ),
-                              ),
                               Expanded(
-                                child: Text(
-                                  optionText,
-                                  style: AppTypography.cardTitle.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.darkText,
-                                  ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      optionText,
+                                      style: AppTypography.cardTitle.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.darkText,
+                                      ),
+                                    ),
+                                    if (isSelected && isAnswered && !isCorrectOption && quizState.selectedOptionWhyWrong != null && quizState.selectedOptionWhyWrong!.isNotEmpty)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: AppSpacing.xs),
+                                        child: Text(
+                                          "لماذا هذا الخيار خطأ؟\n${quizState.selectedOptionWhyWrong}",
+                                          style: AppTypography.caption.copyWith(color: AppColors.errorCoral, fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                  ],
                                 ),
                               ),
-                              ?statusIcon,
+                              if (statusIcon != null) statusIcon,
                             ],
                           ),
                         ),
@@ -471,42 +435,71 @@ class QuizScreen extends ConsumerWidget {
                     }),
 
                     const SizedBox(height: AppSpacing.sm),
-
-                    // --- COMPANION FEEDBACK & SPEECH BUBBLE CARD ---
-                    AppCard(
-                      backgroundColor: AppColors.lightBlue,
-                      border: Border.all(
-                        color: AppColors.primaryBlue.withValues(alpha: 0.2),
-                      ),
-                      padding: const EdgeInsets.all(AppSpacing.sm),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  eventResult.message,
-                                  style: AppTypography.body.copyWith(
-                                    color: AppColors.darkText,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ],
+                    if (isAnswered && quizState.explanationShort != null && quizState.explanationShort!.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      AppCard(
+                        backgroundColor: AppColors.lightTeal.withValues(alpha: 0.3),
+                        border: Border.all(color: AppColors.successGreen.withValues(alpha: 0.2)),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "💡 الشرح والتوضيح",
+                              style: AppTypography.caption.copyWith(fontWeight: FontWeight.bold, color: AppColors.successGreen),
                             ),
-                          ),
-                          const SizedBox(width: AppSpacing.xs),
-                          AnimatedCompanion(
-                            companionType: companion,
-                            emotion: eventResult.emotion,
-                            customHeight: 85,
-                            showBubble: false,
-                            blendWhiteBackground: true,
-                          ),
-                        ],
+                            const SizedBox(height: AppSpacing.xs),
+                            Text(
+                              quizState.explanationShort!,
+                              style: AppTypography.body.copyWith(color: AppColors.darkText),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
+                    ],
+                    if (isAnswered && quizState.explanationDetailed != null && quizState.explanationDetailed!.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      TextButton.icon(
+                        onPressed: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg))),
+                            builder: (_) => Padding(
+                              padding: EdgeInsets.only(
+                                top: AppSpacing.lg,
+                                left: AppSpacing.lg,
+                                right: AppSpacing.lg,
+                                bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.lg,
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text("الشرح المفصل 📚", style: AppTypography.sectionTitle),
+                                  const SizedBox(height: AppSpacing.md),
+                                  Flexible(
+                                    child: SingleChildScrollView(
+                                      child: Text(
+                                        quizState.explanationDetailed!,
+                                        style: AppTypography.body.copyWith(height: 1.6),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: AppSpacing.lg),
+                                  PrimaryButton(
+                                    width: double.infinity,
+                                    text: "إغلاق",
+                                    onPressed: () => Navigator.pop(context),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.menu_book_rounded),
+                        label: const Text("عرض الشرح المفصل"),
+                      ),
+                    ],
                     const SizedBox(height: AppSpacing.md),
                   ],
                 ),
