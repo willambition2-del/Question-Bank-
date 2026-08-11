@@ -1,0 +1,46 @@
+# Admin Backend API Contract Map (Updated & Verified)
+
+This document details every API call performed by the Admin Dashboard, mapping the Dashboard function, Next.js proxy route, Backend endpoint, DTOs, Authentication, Status, and Test Evidence.
+
+## 1. Authentication Routes
+
+| Page | Dashboard Function / Component | Next.js Route / Action | Backend Method & Path | Request DTO | Response DTO | Auth Requirement | Status | Test Evidence |
+|---|---|---|---|---|---|---|---|---|
+| Login | `handleSubmit` | `loginAction` in `src/app/actions/auth.ts` | `POST /api/v1/auth/login` | `LoginDto` (`identifier`, `password`) | `AuthResponseDto` (`accessToken`, `refreshToken`) | PUBLIC | `CONNECTED_AND_AUTOMATED_TESTED` | Automated unit/integration test + BFF Cookie Verification |
+| App Layout / Auth check | `loginAction` role verification | `loginAction` | `GET /api/v1/auth/me` | None | `PublicUserDto` (`id`, `role`, `username`) | Bearer JWT (via HttpOnly Cookie) | `CONNECTED_AND_AUTOMATED_TESTED` | Role check `user.role === SUPER_ADMIN` |
+| Sidebar | `handleLogout` | `logoutAction` in `src/app/actions/auth.ts` | `POST /api/v1/auth/logout` | None | `MessageResponseDto` (`message`) | Bearer JWT (via HttpOnly Cookie) | `CONNECTED_AND_AUTOMATED_TESTED` | Cookie invalidation test |
+| Axios Interceptor | Axios Interceptor 401/403 | `src/lib/axios.ts` / Next.js Proxy | `POST /api/v1/auth/refresh` | `RefreshTokenDto` (`refreshToken`) | `AuthResponseDto` (`accessToken`, `refreshToken`) | PUBLIC | `CONNECTED_NOT_LIVE_TESTED` | Interceptor redirect to `/login` or `/unauthorized` |
+
+## 2. Admin Intelligent Services Routes
+
+All routes require `SUPER_ADMIN` role via Bearer JWT injected automatically by the Next.js API Proxy (`src/app/api/proxy/[...proxy]/route.ts`).
+
+| Page | Dashboard Function | Next.js Route Handler | Backend Method & Path | Request DTO | Response DTO | Auth | Status | Test Evidence |
+|---|---|---|---|---|---|---|---|---|
+| Providers | `getProviders` (SWR) | `GET /api/proxy/admin/intelligent-services/providers` | `GET /api/v1/admin/intelligent-services/providers` | None | `{ data: ProviderDto[] }` | Bearer `SUPER_ADMIN` | `CONNECTED_AND_AUTOMATED_TESTED` | `useSWR` fetcher + render test |
+| Providers | `handleSave` (Create) | `POST /api/proxy/admin/intelligent-services/providers` | `POST /api/v1/admin/intelligent-services/providers` | `CreateProviderDto` | `{ data: ProviderDto }` | Bearer `SUPER_ADMIN` | `CONNECTED_AND_AUTOMATED_TESTED` | Provider creation & secret redaction test |
+| Providers | `handleSave` (Update) | `PATCH /api/proxy/admin/intelligent-services/providers/:id` | `PATCH /api/v1/admin/intelligent-services/providers/:id` | `UpdateProviderDto` | `{ data: ProviderDto }` | Bearer `SUPER_ADMIN` | `CONNECTED_AND_AUTOMATED_TESTED` | Update without changing secret test |
+| Providers | `handleDelete` | `DELETE /api/proxy/admin/intelligent-services/providers/:id` | `DELETE /api/v1/admin/intelligent-services/providers/:id` | None | `{ data: ProviderDto }` | Bearer `SUPER_ADMIN` | `CONNECTED_AND_AUTOMATED_TESTED` | Soft delete / disable test |
+| Providers | `handleTest` | `POST /api/proxy/admin/intelligent-services/providers/:id/test` | `POST /api/v1/admin/intelligent-services/providers/:id/test` | None | `{ data: { success: boolean, message: string } }` | Bearer `SUPER_ADMIN` | `CONNECTED_AND_AUTOMATED_TESTED` | Connection test execution |
+| Models | `getModels` (SWR) | `GET /api/proxy/admin/intelligent-services/models` | `GET /api/v1/admin/intelligent-services/models` | None | `{ data: ModelDto[] }` | Bearer `SUPER_ADMIN` | `CONNECTED_AND_AUTOMATED_TESTED` | Model list fetch test |
+| Models | `handleSave` (Create) | `POST /api/proxy/admin/intelligent-services/models` | `POST /api/v1/admin/intelligent-services/models` | `CreateModelDto` | `{ data: ModelDto }` | Bearer `SUPER_ADMIN` | `CONNECTED_AND_AUTOMATED_TESTED` | Model creation DTO test |
+| Models | `handleSave` (Update) | `PATCH /api/proxy/admin/intelligent-services/models/:id` | `PATCH /api/v1/admin/intelligent-services/models/:id` | `UpdateModelDto` | `{ data: ModelDto }` | Bearer `SUPER_ADMIN` | `CONNECTED_AND_AUTOMATED_TESTED` | Model update DTO test |
+| Models | `handleDelete` | `DELETE /api/proxy/admin/intelligent-services/models/:id` | `DELETE /api/v1/admin/intelligent-services/models/:id` | None | `{ data: ModelDto }` | Bearer `SUPER_ADMIN` | `CONNECTED_AND_AUTOMATED_TESTED` | Model disable test |
+| Routing | `getRoutes` (SWR) | `GET /api/proxy/admin/intelligent-services/routes` | `GET /api/v1/admin/intelligent-services/routes` | None | `{ data: RouteDto[] }` | Bearer `SUPER_ADMIN` | `CONNECTED_AND_AUTOMATED_TESTED` | Route list fetch test |
+| Routing | `handleDragEnd` | `PATCH /api/proxy/admin/intelligent-services/routes/:id` | `PATCH /api/v1/admin/intelligent-services/routes/:id` | `UpdateRouteDto` (`candidates`) | `{ data: RouteDto }` | Bearer `SUPER_ADMIN` | `CONNECTED_AND_AUTOMATED_TESTED` | Drag & Drop reorder persistence test |
+| Routing | Test Routing button | N/A | None (No Backend Endpoint) | N/A | N/A | N/A | `BLOCKED_BY_BACKEND` | Classified as BLOCKED_BY_BACKEND |
+| Prompts | `getPrompts` (SWR) | `GET /api/proxy/admin/intelligent-services/prompts` | `GET /api/v1/admin/intelligent-services/prompts` | None | `{ data: PromptDto[] }` | Bearer `SUPER_ADMIN` | `CONNECTED_AND_AUTOMATED_TESTED` | Prompt list fetch test |
+| Prompts | `handleSave` (Create) | `POST /api/proxy/admin/intelligent-services/prompts` | `POST /api/v1/admin/intelligent-services/prompts` | `CreatePromptDto` | `{ data: PromptDto }` | Bearer `SUPER_ADMIN` | `CONNECTED_AND_AUTOMATED_TESTED` | Create prompt version test |
+| Prompts | `handleActivate` | `POST /api/proxy/admin/intelligent-services/prompts/:id/activate` | `POST /api/v1/admin/intelligent-services/prompts/:id/activate` | None | `{ data: PromptDto }` | Bearer `SUPER_ADMIN` | `CONNECTED_AND_AUTOMATED_TESTED` | Activate version test |
+| Knowledge | `getKnowledgeBases` (SWR) | `GET /api/proxy/admin/knowledge-bases` | `GET /api/v1/admin/knowledge-bases` | None | `{ data: KnowledgeBaseDto[] }` | Bearer `SUPER_ADMIN` | `CONNECTED_AND_AUTOMATED_TESTED` | Knowledge base list test |
+| Knowledge | `handleSave` (Create) | `POST /api/proxy/admin/knowledge-bases` | `POST /api/v1/admin/knowledge-bases` | `CreateKnowledgeBaseDto` | `{ data: KnowledgeBaseDto }` | Bearer `SUPER_ADMIN` | `CONNECTED_AND_AUTOMATED_TESTED` | Create KB test |
+| Knowledge | `handleTest` (Search) | `POST /api/proxy/admin/knowledge-bases/:id/test-search` | `POST /api/v1/admin/knowledge-bases/:id/test-search` | `SearchKnowledgeDto` | `{ data: SearchResultDto }` | Bearer `SUPER_ADMIN` | `CONNECTED_AND_AUTOMATED_TESTED` | Keyword search test |
+| Documents | `getDocuments` (SWR) | `GET /api/proxy/admin/knowledge-bases/:id/documents` | `GET /api/v1/admin/knowledge-bases/:id/documents` | None | `{ data: DocumentDto[] }` | Bearer `SUPER_ADMIN` | `CONNECTED_AND_AUTOMATED_TESTED` | Documents list per KB test |
+| Documents | `handleUpload` | `POST /api/proxy/admin/knowledge-bases/:id/documents` | `POST /api/v1/admin/knowledge-bases/:id/documents` | Multipart `FormData` (`file`, `title`, `language`) | `{ data: DocumentDto }` | Bearer `SUPER_ADMIN` | `CONNECTED_AND_AUTOMATED_TESTED` | Multipart upload test & progress |
+| Documents | `handleReprocess` | `POST /api/proxy/admin/knowledge-documents/:id/reprocess` | `POST /api/v1/admin/knowledge-documents/:id/reprocess` | None | `{ data: DocumentDto }` | Bearer `SUPER_ADMIN` | `CONNECTED_AND_AUTOMATED_TESTED` | Reprocess document test |
+| Documents | `handleDelete` | `DELETE /api/proxy/admin/knowledge-documents/:id` | `DELETE /api/v1/admin/knowledge-documents/:id` | None | `{ data: DocumentDto }` | Bearer `SUPER_ADMIN` | `CONNECTED_AND_AUTOMATED_TESTED` | Archive document test |
+| Usage Policies | `getPolicies` (SWR) | `GET /api/proxy/admin/intelligent-services/usage-policies` | `GET /api/v1/admin/intelligent-services/usage-policies` | None | `{ data: UsagePolicyDto[] }` | Bearer `SUPER_ADMIN` | `CONNECTED_AND_AUTOMATED_TESTED` | Usage policies fetch test |
+| Usage Policies | `handleSave` (Update) | `PATCH /api/proxy/admin/intelligent-services/usage-policies/:taskType` | `PATCH /api/v1/admin/intelligent-services/usage-policies/:taskType` | `UpdateUsagePolicyDto` | `{ data: UsagePolicyDto }` | Bearer `SUPER_ADMIN` | `CONNECTED_AND_AUTOMATED_TESTED` | Update usage policy test |
+| Usage Stats | `getUsage` (SWR) | `GET /api/proxy/admin/intelligent-services/usage` | `GET /api/v1/admin/intelligent-services/usage` | None | `{ data: UsageOverviewDto }` | Bearer `SUPER_ADMIN` | `CONNECTED_AND_AUTOMATED_TESTED` | Usage overview fetch test |
+| Usage Stats | `getCosts` (SWR) | `GET /api/proxy/admin/intelligent-services/costs` | `GET /api/v1/admin/intelligent-services/costs` | None | `{ data: CostsOverviewDto }` | Bearer `SUPER_ADMIN` | `CONNECTED_AND_AUTOMATED_TESTED` | Costs breakdown fetch test |
+| Health | `getHealth` (SWR) | `GET /api/proxy/admin/intelligent-services/health` | `GET /api/v1/admin/intelligent-services/health` | None | `{ data: SystemHealthDto }` | Bearer `SUPER_ADMIN` | `CONNECTED_AND_AUTOMATED_TESTED` | Health & Circuit Breaker test |

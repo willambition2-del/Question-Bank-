@@ -1,0 +1,1831 @@
+generator client {
+  provider     = "prisma-client"
+  moduleFormat = "cjs"
+  output       = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  STUDENT
+  REVIEWER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum CompanionType {
+  MALE
+  FEMALE
+}
+
+enum IdentityProvider {
+  GOOGLE
+}
+
+enum SourceType {
+  MINISTRY_EXAM
+  MINISTRY_MODEL
+  TEXTBOOK
+  TEACHER
+  IMPORT
+  GENERATED
+  OTHER
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+}
+
+enum QuestionDifficulty {
+  EASY
+  MEDIUM
+  HARD
+  MIXED
+}
+
+enum QuestionReviewStatus {
+  DRAFT
+  REVIEW_REQUIRED
+  READY
+  REJECTED
+  ARCHIVED
+}
+
+enum ImportFileType {
+  CSV
+  JSON
+  XLSX
+  SQLITE
+  POSTGRES_DUMP
+  ZIP
+  PDF
+}
+
+enum ImportStatus {
+  PENDING
+  VALIDATING
+  READY_TO_IMPORT
+  PROCESSING
+  UPLOADED
+  ANALYZING
+  MAPPING_REQUIRED
+  READY_FOR_DRY_RUN
+  DRY_RUNNING
+  DRY_RUN_COMPLETED
+  IMPORTING
+  PAUSED
+  COMPLETED_WITH_WARNINGS
+  COMPLETED
+  FAILED
+  CANCELLED
+  ROLLED_BACK
+}
+
+enum QuestionImportMode {
+  DRY_RUN
+  IMPORT
+}
+
+enum QuestionImportApprovalMode {
+  OWNER_APPROVED_FULL_IMPORT
+}
+
+enum ImportedSourceEntityType {
+  SUBJECT
+  UNIT
+  LESSON
+  SOURCE
+  PASSAGE
+  QUESTION
+  OPTION
+}
+
+enum QuestionImportRowStatus {
+  VALID
+  WARNING
+  INVALID
+  DUPLICATE
+  IMPORTED
+  UPDATED
+  SKIPPED
+  REQUIRES_REVIEW
+  FAILED
+  REVIEW_CONFLICT
+}
+
+enum QuestionImportSourceType {
+  CSV
+  JSON
+  XLSX
+  SQLITE
+  POSTGRES_DUMP
+  ZIP
+  PDF
+  MANUAL
+}
+
+enum QuestionImportConflictPolicy {
+  SKIP_EXISTING
+  CREATE_NEW_VERSION
+  UPDATE_MISSING_FIELDS_ONLY
+  MERGE_REVIEW_REQUIRED
+}
+
+enum QuestionImportRollbackStatus {
+  REQUESTED
+  COMPLETED
+  COMPLETED_WITH_BLOCKS
+  BLOCKED_BY_DEPENDENCIES
+  FAILED
+}
+
+enum QuizScope {
+  SUBJECT
+  UNIT
+  LESSON
+  EXAM_MODEL
+  RANDOM
+  MISTAKES
+  WEAKNESS
+  SAVED
+}
+
+enum QuizAttemptStatus {
+  CREATED
+  IN_PROGRESS
+  COMPLETED
+  EXPIRED
+  ABANDONED
+}
+
+enum QuizTimingMode {
+  NONE
+  PER_QUESTION
+  TOTAL_TIME
+}
+
+enum ExplanationMode {
+  AFTER_EACH
+  AT_END
+  DISABLED
+}
+
+enum QuestionOrigin {
+  MANUAL
+  IMPORTED
+  GENERATED
+}
+
+enum PointType {
+  QUIZ_CORRECT
+  QUIZ_COMPLETE
+  FAST_ANSWER
+  DAILY_TASK
+  ACHIEVEMENT
+  CHALLENGE_WIN
+  STREAK
+  ADMIN_ADJUSTMENT
+}
+
+enum AchievementCategory {
+  QUIZZES
+  ACCURACY
+  STREAK
+  QUESTIONS
+  MISTAKES
+  CHALLENGES
+  SUBJECT_MASTERY
+  SPECIAL
+}
+
+enum AchievementConditionType {
+  QUIZZES_COMPLETED
+  CORRECT_ANSWERS
+  ANSWERED_QUESTIONS
+  CURRENT_STREAK
+  MISTAKES_REVIEWED
+  CHALLENGES_WON
+  SUBJECT_MASTERY
+  TOTAL_POINTS
+  FAST_ANSWERS
+}
+
+enum DailyTaskType {
+  ANSWER_QUESTIONS
+  CORRECT_ANSWERS
+  REVIEW_MISTAKES
+  COMPLETE_QUIZ
+  COMPLETE_LESSON
+  PLAY_CHALLENGE
+  WIN_CHALLENGE
+  DAILY_QUESTION
+}
+
+enum UpdateCategory {
+  QUESTIONS
+  FEATURES
+  COMPETITIONS
+  IMPROVEMENTS
+  GENERAL
+}
+
+enum NotificationType {
+  ACHIEVEMENT
+  ACHIEVEMENT_UNLOCKED
+  DAILY_TASK
+  DAILY_REMINDER
+  WEAK_SUBJECT
+  CHALLENGE
+  CHALLENGE_INVITE
+  CHALLENGE_RESULT
+  UPDATE
+  STREAK
+  SYSTEM
+  RECOMMENDATION
+}
+
+enum PushDevicePlatform {
+  ANDROID
+  IOS
+  WEB
+}
+
+enum ChallengeMode {
+  ONE_VS_ONE
+  TWO_VS_TWO
+  LIGHTNING
+  SURVIVAL
+}
+
+enum ChallengeStatus {
+  CREATED
+  MATCHMAKING
+  WAITING
+  COUNTDOWN
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  EXPIRED
+}
+
+enum ChallengeParticipantStatus {
+  INVITED
+  JOINED
+  READY
+  PLAYING
+  ELIMINATED
+  LEFT
+  COMPLETED
+}
+
+enum ServiceTaskType {
+  TEXT_CHAT
+  QUESTION_EXPLANATION
+  QUESTION_HINT
+  ANSWER_REVIEW
+  LESSON_SUMMARY
+  LESSON_SIMPLIFICATION
+  STUDY_ASSISTANT
+  IMAGE_QUESTION_ANALYSIS
+  IMAGE_OCR
+  DOCUMENT_QUESTION_ANSWERING
+  MATH_PROBLEM_SOLVING
+  QUESTION_GENERATION
+  QUIZ_GENERATION
+  DISTRACTOR_GENERATION
+  ANSWER_EXPLANATION_GENERATION
+  WRONG_OPTION_EXPLANATION
+  CONTENT_CLASSIFICATION
+  CONTENT_MODERATION
+  RECOMMENDATION_EXPLANATION
+  EMBEDDING_GENERATION
+  RERANKING
+}
+
+enum ServiceProviderType {
+  OPENAI_COMPATIBLE
+  GOOGLE_COMPATIBLE
+  CUSTOM_HTTP
+  NVIDIA
+  LOCAL_MODEL
+  OTHER
+}
+
+enum ServiceProviderAuthType {
+  BEARER
+  API_KEY_HEADER
+  QUERY_PARAMETER
+  NONE
+}
+
+enum RoutingStrategy {
+  PRIORITY
+  WEIGHTED
+  LOWEST_COST
+  LOWEST_LATENCY
+  QUALITY_FIRST
+  BALANCED
+}
+
+enum ServiceHealthStatus {
+  HEALTHY
+  DEGRADED
+  UNAVAILABLE
+  DISABLED
+  RATE_LIMITED
+  CIRCUIT_OPEN
+}
+
+enum ServiceRequestStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REJECTED
+  CANCELLED
+}
+
+enum KnowledgeBaseScope {
+  GLOBAL
+  SUBJECT
+  UNIT
+  LESSON
+  QUESTION_BANK
+  ADMIN_PRIVATE
+}
+
+enum KnowledgeDocumentStatus {
+  UPLOADED
+  QUEUED
+  EXTRACTING
+  OCR_REQUIRED
+  OCR_PROCESSING
+  CHUNKING
+  EMBEDDING
+  READY
+  PARTIALLY_READY
+  FAILED
+  ARCHIVED
+}
+
+enum KnowledgeEmbeddingStatus {
+  PENDING
+  READY
+  FAILED
+}
+
+enum AdminPrivilegeAuditAction {
+  CREATED_SUPER_ADMIN
+  PROMOTED_SUPER_ADMIN
+}
+
+enum ProviderCredentialAuditAction {
+  CREATED
+  REPLACED
+  TEST_SUCCEEDED
+  TEST_FAILED
+  DISABLED
+}
+
+model User {
+  id                      String                    @id @default(uuid())
+  name                    String
+  username                String                    @unique
+  phone                   String?                   @unique
+  email                   String?                   @unique
+  passwordHash            String?
+  refreshTokenHash        String?
+  lastLoginAt             DateTime?
+  tokenVersion            Int                       @default(0)
+  passwordChangedAt       DateTime?
+  role                    UserRole                  @default(STUDENT)
+  companion               CompanionType             @default(MALE)
+  schoolName              String?
+  isActive                Boolean                   @default(true)
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+  deletedAt               DateTime?
+  createdPassages         ReadingPassage[]          @relation("ReadingPassageCreatedBy")
+  reviewedPassages        ReadingPassage[]          @relation("ReadingPassageReviewedBy")
+  createdQuestions        Question[]                @relation("QuestionCreatedBy")
+  reviewedQuestions       Question[]                @relation("QuestionReviewedBy")
+  questionReviews         QuestionReview[]          @relation("QuestionReviewReviewer")
+  questionImports         QuestionImportJob[]
+  approvedQuestionImports QuestionImportJob[]       @relation("QuestionImportApprovedBy")
+  adminPrivilegeAudits    AdminPrivilegeAudit[]
+  importRollbacks         QuestionImportRollback[]  @relation("QuestionImportRollbackActor")
+  questionExports         QuestionExportAudit[]
+  quizAttempts            QuizAttempt[]
+  questionProgress        StudentQuestionProgress[]
+  lessonProgress          StudentLessonProgress[]
+  unitProgress            StudentUnitProgress[]
+  subjectProgress         StudentSubjectProgress[]
+  savedQuestions          SavedQuestion[]
+  dailyActivities         StudentDailyActivity[]
+  points                  UserPoints?
+  pointTransactions       PointTransaction[]
+  achievements            UserAchievement[]
+  dailyTasks              UserDailyTask[]
+  streak                  UserStreak?
+  createdUpdates          AppUpdate[]               @relation("AppUpdateCreatedBy")
+  notifications           Notification[]
+  pushDevices             PushDevice[]
+  createdChallenges       Challenge[]               @relation("ChallengeCreatedBy")
+  wonChallenges           Challenge[]               @relation("ChallengeWinner")
+  favoriteSubjects        UserSubjectFavorite[]
+  challengeEntries        ChallengeParticipant[]
+  identities              UserIdentity[]
+  supportTickets          SupportTicket[]
+  ticketMessages          TicketMessage[]
+  createdAnnouncements    SystemAnnouncement[]      @relation("AnnouncementCreatedBy")
+  subscriptions           UserSubscription[]
+  paymentTransactions     PaymentTransaction[]
+
+  @@index([role, isActive])
+}
+
+model UserIdentity {
+  id             String           @id @default(uuid())
+  userId         String
+  provider       IdentityProvider
+  providerUserId String
+  providerEmail  String?
+  emailVerified  Boolean          @default(false)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserId])
+  @@index([userId])
+}
+
+model Grade {
+  id               String            @id @default(uuid())
+  name             String
+  slug             String            @unique
+  description      String?
+  sortOrder        Int               @default(0)
+  isActive         Boolean           @default(true)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  deletedAt        DateTime?
+  curriculumGrades CurriculumGrade[]
+  subjects         Subject[]
+
+  @@index([name, deletedAt])
+  @@index([sortOrder, isActive, deletedAt])
+}
+
+model Curriculum {
+  id               String            @id @default(uuid())
+  name             String
+  slug             String            @unique
+  countryCode      String
+  academicYear     String?
+  description      String?
+  isActive         Boolean           @default(true)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  deletedAt        DateTime?
+  curriculumGrades CurriculumGrade[]
+  subjects         Subject[]
+
+  @@index([countryCode, isActive, deletedAt])
+  @@index([name, deletedAt])
+}
+
+model CurriculumGrade {
+  id           String     @id @default(uuid())
+  curriculumId String
+  gradeId      String
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  curriculum   Curriculum @relation(fields: [curriculumId], references: [id], onDelete: Restrict)
+  grade        Grade      @relation(fields: [gradeId], references: [id], onDelete: Restrict)
+
+  @@unique([curriculumId, gradeId])
+  @@index([gradeId, isActive])
+}
+
+model Subject {
+  id              String           @id @default(uuid())
+  curriculumId    String
+  gradeId         String
+  name            String
+  slug            String
+  description     String?
+  iconKey         String?
+  colorHex        String?
+  sortOrder       Int              @default(0)
+  isActive        Boolean          @default(true)
+  isPublished     Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  deletedAt       DateTime?
+  curriculum      Curriculum       @relation(fields: [curriculumId], references: [id], onDelete: Restrict)
+  grade           Grade            @relation(fields: [gradeId], references: [id], onDelete: Restrict)
+  units           Unit[]
+  lessons         Lesson[]
+  readingPassages ReadingPassage[]
+  questions       Question[]
+  examModels      ExamModel[]
+  quizAttempts    QuizAttempt[]
+
+  studentProgress StudentSubjectProgress[]
+  savedQuestions  SavedQuestion[]
+  challenges      Challenge[]
+  favoritedBy     UserSubjectFavorite[]
+
+  @@unique([curriculumId, gradeId, slug])
+  @@index([curriculumId, gradeId, sortOrder])
+  @@index([isActive, isPublished, deletedAt])
+  @@index([name])
+}
+
+model Unit {
+  quizAttempts    QuizAttempt[]
+  id              String                @id @default(uuid())
+  subjectId       String
+  name            String
+  slug            String
+  description     String?
+  sortOrder       Int                   @default(0)
+  isActive        Boolean               @default(true)
+  isPublished     Boolean               @default(false)
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  deletedAt       DateTime?
+  subject         Subject               @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+  lessons         Lesson[]
+  questions       Question[]
+  studentProgress StudentUnitProgress[]
+  savedQuestions  SavedQuestion[]
+  challenges      Challenge[]
+
+  @@unique([subjectId, slug])
+  @@index([subjectId, sortOrder])
+  @@index([subjectId, isActive, isPublished, deletedAt])
+}
+
+model Lesson {
+  id              String                  @id @default(uuid())
+  subjectId       String
+  unitId          String
+  name            String
+  slug            String
+  description     String?
+  summary         String?
+  sortOrder       Int                     @default(0)
+  isActive        Boolean                 @default(true)
+  isPublished     Boolean                 @default(false)
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  deletedAt       DateTime?
+  subject         Subject                 @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+  unit            Unit                    @relation(fields: [unitId], references: [id], onDelete: Restrict)
+  questions       Question[]
+  quizAttempts    QuizAttempt[]
+  studentProgress StudentLessonProgress[]
+  savedQuestions  SavedQuestion[]
+  challenges      Challenge[]
+
+  @@unique([unitId, slug])
+  @@index([subjectId, sortOrder])
+  @@index([unitId, sortOrder])
+  @@index([unitId, isActive, isPublished, deletedAt])
+}
+
+model Source {
+  id              String           @id @default(uuid())
+  name            String
+  type            SourceType
+  year            Int?
+  governorate     String?
+  description     String?
+  referenceUrl    String?
+  isOfficial      Boolean          @default(false)
+  isActive        Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  deletedAt       DateTime?
+  readingPassages ReadingPassage[]
+  questions       Question[]
+  examModels      ExamModel[]
+
+  @@index([type, year])
+  @@index([isActive, deletedAt])
+  @@index([name])
+}
+
+model ReadingPassage {
+  id           String              @id @default(uuid())
+  subjectId    String
+  sourceId     String?
+  title        String?
+  passageText  String
+  languageCode String              @default("ar")
+  difficulty   QuestionDifficulty?
+  isActive     Boolean             @default(true)
+  isPublished  Boolean             @default(false)
+  createdById  String?
+  reviewedById String?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  deletedAt    DateTime?
+  subject      Subject             @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+  source       Source?             @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  createdBy    User?               @relation("ReadingPassageCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  reviewedBy   User?               @relation("ReadingPassageReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+  questions    Question[]
+
+  @@index([subjectId, isActive, isPublished, deletedAt])
+  @@index([sourceId])
+}
+
+model Question {
+  id                  String                    @id @default(uuid())
+  subjectId           String
+  unitId              String?
+  lessonId            String?
+  sourceId            String?
+  readingPassageId    String?
+  type                QuestionType
+  questionText        String
+  questionImageUrl    String?
+  correctBoolean      Boolean?
+  hintText            String?
+  explanationShort    String?
+  explanationDetailed String?
+  dangerKeyword       String?
+  commonMistake       String?
+  difficulty          QuestionDifficulty        @default(MEDIUM)
+  reviewStatus        QuestionReviewStatus      @default(DRAFT)
+  origin              QuestionOrigin            @default(MANUAL)
+  fingerprint         String?
+  isTrapQuestion      Boolean                   @default(false)
+  isActive            Boolean                   @default(true)
+  isPublished         Boolean                   @default(false)
+  contentVersion      Int                       @default(1)
+  createdById         String?
+  reviewedById        String?
+  reviewedAt          DateTime?
+  rejectionReason     String?
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
+  deletedAt           DateTime?
+  subject             Subject                   @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+  unit                Unit?                     @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  lesson              Lesson?                   @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  source              Source?                   @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  readingPassage      ReadingPassage?           @relation(fields: [readingPassageId], references: [id], onDelete: SetNull)
+  createdBy           User?                     @relation("QuestionCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  reviewedBy          User?                     @relation("QuestionReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+  options             QuestionOption[]
+  reviews             QuestionReview[]
+  examModels          ExamModelQuestion[]
+  attemptQuestions    QuizAttemptQuestion[]
+  quizAnswers         QuizAnswer[]
+  studentProgress     StudentQuestionProgress[]
+  savedByStudents     SavedQuestion[]
+  challengeQuestions  ChallengeQuestion[]
+  challengeAnswers    ChallengeAnswer[]
+  sourceReferences    QuestionSourceReference[]
+
+  @@index([subjectId])
+  @@index([unitId])
+  @@index([lessonId])
+  @@index([sourceId])
+  @@index([readingPassageId])
+  @@index([reviewStatus])
+  @@index([difficulty])
+  @@index([type])
+  @@index([isPublished, isActive, deletedAt])
+  @@index([createdAt])
+  @@index([fingerprint])
+}
+
+model QuestionImportJob {
+  id                    String                       @id @default(uuid())
+  uploadedById          String?
+  fileName              String
+  fileUrl               String?
+  fileType              ImportFileType
+  status                ImportStatus                 @default(PENDING)
+  sourceType            QuestionImportSourceType?
+  originalFileName      String?
+  storagePath           String?
+  checksum              String?                      @unique
+  mode                  QuestionImportMode           @default(DRY_RUN)
+  approvalMode          QuestionImportApprovalMode?
+  approvedById          String?
+  approvedAt            DateTime?
+  conflictPolicy        QuestionImportConflictPolicy @default(SKIP_EXISTING)
+  totalRows             Int                          @default(0)
+  processedRows         Int                          @default(0)
+  validRows             Int                          @default(0)
+  invalidRows           Int                          @default(0)
+  importedRows          Int                          @default(0)
+  updatedRows           Int                          @default(0)
+  skippedRows           Int                          @default(0)
+  duplicateRows         Int                          @default(0)
+  failedRows            Int                          @default(0)
+  reviewRows            Int                          @default(0)
+  cursor                Int                          @default(0)
+  errorFileUrl          String?
+  payload               Json
+  validationErrors      Json?
+  errorSummary          Json?
+  settingsJson          Json?
+  startedAt             DateTime?
+  completedAt           DateTime?
+  createdAt             DateTime                     @default(now())
+  updatedAt             DateTime                     @updatedAt
+  uploadedBy            User?                        @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+  approvedBy            User?                        @relation("QuestionImportApprovedBy", fields: [approvedById], references: [id], onDelete: Restrict)
+  rows                  QuestionImportRow[]
+  sourceReferences      QuestionSourceReference[]
+  importedSourceRecords ImportedSourceRecord[]
+  rollbacks             QuestionImportRollback[]
+
+  @@index([uploadedById, createdAt])
+  @@index([status, createdAt])
+  @@index([sourceType, createdAt])
+  @@index([approvedById, approvedAt])
+}
+
+model ImportedSourceRecord {
+  id             String                   @id @default(uuid())
+  importJobId    String
+  sourceChecksum String
+  entityType     ImportedSourceEntityType
+  sourceRecordId String
+  targetRecordId String
+  metadataJson   Json?
+  createdAt      DateTime                 @default(now())
+  importJob      QuestionImportJob        @relation(fields: [importJobId], references: [id], onDelete: Restrict)
+
+  @@unique([sourceChecksum, entityType, sourceRecordId], map: "ImportedSourceRecord_sourceChecksum_entityType_sourceRecordId_k")
+  @@index([importJobId, entityType])
+  @@index([entityType, targetRecordId])
+}
+
+model QuestionImportRow {
+  id                    String                  @id @default(uuid())
+  importJobId           String
+  rowNumber             Int
+  sheetName             String?
+  externalId            String?
+  sourcePayloadJson     Json
+  normalizedPayloadJson Json?
+  destinationQuestionId String?
+  status                QuestionImportRowStatus
+  errorCodes            Json?
+  warningCodes          Json?
+  fingerprint           String?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  importJob             QuestionImportJob       @relation(fields: [importJobId], references: [id], onDelete: Cascade)
+
+  @@unique([importJobId, rowNumber, sheetName])
+  @@index([importJobId, status, rowNumber])
+  @@index([fingerprint])
+  @@index([destinationQuestionId])
+}
+
+model QuestionSourceReference {
+  id             String                   @id @default(uuid())
+  questionId     String
+  importJobId    String?
+  sourceType     QuestionImportSourceType
+  sourceFile     String
+  sourceRow      Int?
+  externalId     String?
+  sourceChecksum String
+  importedAt     DateTime                 @default(now())
+  question       Question                 @relation(fields: [questionId], references: [id], onDelete: Restrict)
+  importJob      QuestionImportJob?       @relation(fields: [importJobId], references: [id], onDelete: SetNull)
+
+  @@unique([sourceType, sourceChecksum, sourceRow, externalId])
+  @@index([questionId, importedAt])
+  @@index([importJobId])
+  @@index([externalId])
+}
+
+model QuestionImportRollback {
+  id            String                       @id @default(uuid())
+  importJobId   String
+  actorId       String
+  status        QuestionImportRollbackStatus @default(REQUESTED)
+  deletedRows   Int                          @default(0)
+  blockedRows   Int                          @default(0)
+  blockedReason Json?
+  createdAt     DateTime                     @default(now())
+  completedAt   DateTime?
+  importJob     QuestionImportJob            @relation(fields: [importJobId], references: [id], onDelete: Restrict)
+  actor         User                         @relation("QuestionImportRollbackActor", fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([importJobId, createdAt])
+  @@index([actorId, createdAt])
+}
+
+model AdminPrivilegeAudit {
+  id           String                    @id @default(uuid())
+  targetUserId String
+  action       AdminPrivilegeAuditAction
+  previousRole UserRole?
+  activated    Boolean
+  environment  String
+  actorLabel   String
+  metadataJson Json?
+  createdAt    DateTime                  @default(now())
+  targetUser   User                      @relation(fields: [targetUserId], references: [id], onDelete: Restrict)
+
+  @@index([targetUserId, createdAt])
+  @@index([action, createdAt])
+}
+
+model QuestionExportAudit {
+  id          String   @id @default(uuid())
+  actorId     String
+  format      String
+  rowCount    Int
+  filtersJson Json?
+  createdAt   DateTime @default(now())
+  actor       User     @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([actorId, createdAt])
+}
+
+model ExamModel {
+  id              String              @id @default(uuid())
+  subjectId       String
+  sourceId        String?
+  title           String
+  slug            String              @unique
+  year            Int?
+  governorate     String?
+  description     String?
+  durationMinutes Int
+  difficulty      QuestionDifficulty  @default(MIXED)
+  isOfficial      Boolean             @default(false)
+  isPublished     Boolean             @default(false)
+  sortOrder       Int                 @default(0)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  deletedAt       DateTime?
+  subject         Subject             @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+  source          Source?             @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  questions       ExamModelQuestion[]
+  quizAttempts    QuizAttempt[]
+
+  @@index([subjectId, isPublished, deletedAt])
+  @@index([sourceId])
+  @@index([year, governorate])
+  @@index([sortOrder])
+}
+
+model ExamModelQuestion {
+  id          String    @id @default(uuid())
+  examModelId String
+  questionId  String
+  sortOrder   Int       @default(0)
+  points      Decimal   @default(1) @db.Decimal(8, 2)
+  examModel   ExamModel @relation(fields: [examModelId], references: [id], onDelete: Cascade)
+  question    Question  @relation(fields: [questionId], references: [id], onDelete: Restrict)
+
+  @@unique([examModelId, questionId])
+  @@unique([examModelId, sortOrder])
+  @@index([questionId])
+}
+
+model QuestionOption {
+  id               String            @id @default(uuid())
+  questionId       String
+  optionText       String
+  optionImageUrl   String?
+  sortOrder        Int               @default(0)
+  isCorrect        Boolean           @default(false)
+  whyWrong         String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  question         Question          @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  quizAnswers      QuizAnswer[]
+  challengeAnswers ChallengeAnswer[]
+
+  @@unique([questionId, sortOrder])
+  @@index([questionId])
+}
+
+model QuestionReview {
+  id             String               @id @default(uuid())
+  questionId     String
+  reviewerId     String
+  previousStatus QuestionReviewStatus
+  newStatus      QuestionReviewStatus
+  note           String?
+  createdAt      DateTime             @default(now())
+  question       Question             @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  reviewer       User                 @relation("QuestionReviewReviewer", fields: [reviewerId], references: [id], onDelete: Restrict)
+
+  @@index([questionId, createdAt])
+  @@index([reviewerId, createdAt])
+}
+
+model QuizAttempt {
+  id              String                @id @default(uuid())
+  userId          String
+  scope           QuizScope
+  subjectId       String?
+  unitId          String?
+  lessonId        String?
+  examModelId     String?
+  status          QuizAttemptStatus     @default(CREATED)
+  questionCount   Int
+  correctCount    Int                   @default(0)
+  wrongCount      Int                   @default(0)
+  unansweredCount Int                   @default(0)
+  scorePercent    Decimal               @default(0) @db.Decimal(5, 2)
+  pointsEarned    Int                   @default(0)
+  heartsRemaining Int?
+  startedAt       DateTime              @default(now())
+  completedAt     DateTime?
+  expiresAt       DateTime?
+  lastActivityAt  DateTime              @default(now())
+  settings        Json
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  user            User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject         Subject?              @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  unit            Unit?                 @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  lesson          Lesson?               @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  examModel       ExamModel?            @relation(fields: [examModelId], references: [id], onDelete: SetNull)
+  questions       QuizAttemptQuestion[]
+  answers         QuizAnswer[]
+
+  @@index([userId, status, createdAt])
+  @@index([userId, subjectId, createdAt])
+  @@index([expiresAt, status])
+}
+
+model QuizAttemptQuestion {
+  id         String      @id @default(uuid())
+  attemptId  String
+  questionId String
+  sortOrder  Int
+  snapshot   Json?
+  createdAt  DateTime    @default(now())
+  attempt    QuizAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question   Question    @relation(fields: [questionId], references: [id], onDelete: Restrict)
+
+  @@unique([attemptId, questionId])
+  @@unique([attemptId, sortOrder])
+  @@index([questionId])
+}
+
+model QuizAnswer {
+  id                   String          @id @default(uuid())
+  attemptId            String
+  questionId           String
+  selectedOptionId     String?
+  selectedBoolean      Boolean?
+  isCorrect            Boolean
+  timeSpentMs          Int
+  hintUsed             Boolean         @default(false)
+  eliminatedOptionUsed Boolean         @default(false)
+  pointsEarned         Int             @default(0)
+  answeredAt           DateTime        @default(now())
+  attempt              QuizAttempt     @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question             Question        @relation(fields: [questionId], references: [id], onDelete: Restrict)
+  selectedOption       QuestionOption? @relation(fields: [selectedOptionId], references: [id], onDelete: SetNull)
+
+  @@unique([attemptId, questionId])
+  @@index([questionId, answeredAt])
+  @@index([selectedOptionId])
+}
+
+model StudentQuestionProgress {
+  id                   String    @id @default(uuid())
+  userId               String
+  questionId           String
+  attemptsCount        Int       @default(0)
+  correctCount         Int       @default(0)
+  wrongCount           Int       @default(0)
+  consecutiveCorrect   Int       @default(0)
+  consecutiveWrong     Int       @default(0)
+  masteryScore         Decimal   @default(0) @db.Decimal(5, 2)
+  averageTimeMs        Int       @default(0)
+  lastTimeMs           Int       @default(0)
+  lastAnswerCorrect    Boolean?
+  lastSelectedOptionId String?
+  lastSelectedBoolean  Boolean?
+  firstAnsweredAt      DateTime?
+  lastAnsweredAt       DateTime?
+  lastCorrectAt        DateTime?
+  lastWrongAt          DateTime?
+  isMastered           Boolean   @default(false)
+  masteredAt           DateTime?
+  manualReviewedAt     DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question             Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId])
+  @@index([userId, wrongCount, isMastered])
+  @@index([questionId])
+  @@index([userId, lastAnsweredAt])
+}
+
+model StudentLessonProgress {
+  id                String    @id @default(uuid())
+  userId            String
+  lessonId          String
+  answeredQuestions Int       @default(0)
+  correctAnswers    Int       @default(0)
+  wrongAnswers      Int       @default(0)
+  accuracyPercent   Decimal   @default(0) @db.Decimal(5, 2)
+  masteryPercent    Decimal   @default(0) @db.Decimal(5, 2)
+  averageTimeMs     Int       @default(0)
+  lastActivityAt    DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson            Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@index([lessonId])
+  @@index([userId, lastActivityAt])
+}
+
+model StudentUnitProgress {
+  id                String    @id @default(uuid())
+  userId            String
+  unitId            String
+  answeredQuestions Int       @default(0)
+  correctAnswers    Int       @default(0)
+  wrongAnswers      Int       @default(0)
+  accuracyPercent   Decimal   @default(0) @db.Decimal(5, 2)
+  masteryPercent    Decimal   @default(0) @db.Decimal(5, 2)
+  averageTimeMs     Int       @default(0)
+  lastActivityAt    DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  unit              Unit      @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, unitId])
+  @@index([unitId])
+  @@index([userId, lastActivityAt])
+}
+
+model StudentSubjectProgress {
+  id                String    @id @default(uuid())
+  userId            String
+  subjectId         String
+  answeredQuestions Int       @default(0)
+  correctAnswers    Int       @default(0)
+  wrongAnswers      Int       @default(0)
+  accuracyPercent   Decimal   @default(0) @db.Decimal(5, 2)
+  masteryPercent    Decimal   @default(0) @db.Decimal(5, 2)
+  averageTimeMs     Int       @default(0)
+  lastActivityAt    DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject           Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, subjectId])
+  @@index([subjectId])
+  @@index([userId, lastActivityAt])
+}
+
+model SavedQuestion {
+  id         String   @id @default(uuid())
+  userId     String
+  questionId String
+  note       String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  subject    Subject? @relation(fields: [subjectId], references: [id])
+  subjectId  String?
+  unit       Unit?    @relation(fields: [unitId], references: [id])
+  unitId     String?
+  lesson     Lesson?  @relation(fields: [lessonId], references: [id])
+  lessonId   String?
+
+  @@unique([userId, questionId])
+  @@index([userId, createdAt])
+  @@index([questionId])
+}
+
+model StudentDailyActivity {
+  id                String   @id @default(uuid())
+  userId            String
+  date              DateTime @db.Date
+  answeredQuestions Int      @default(0)
+  correctAnswers    Int      @default(0)
+  wrongAnswers      Int      @default(0)
+  quizzesCompleted  Int      @default(0)
+  challengesPlayed  Int      @default(0)
+  pointsEarned      Int      @default(0)
+  studyTimeSeconds  Int      @default(0)
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId, date])
+}
+
+model UserPoints {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  totalPoints    Int      @default(0)
+  lifetimePoints Int      @default(0)
+  level          Int      @default(1)
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PointTransaction {
+  id             String    @id @default(uuid())
+  userId         String
+  amount         Int
+  type           PointType
+  referenceType  String?
+  referenceId    String?
+  idempotencyKey String    @unique
+  description    String?
+  createdAt      DateTime  @default(now())
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([type, createdAt])
+}
+
+model Achievement {
+  id             String                   @id @default(uuid())
+  key            String                   @unique
+  name           String
+  description    String
+  iconKey        String?
+  category       AchievementCategory
+  conditionType  AchievementConditionType
+  conditionValue Int
+  pointsReward   Int                      @default(0)
+  isSecret       Boolean                  @default(false)
+  isActive       Boolean                  @default(true)
+  sortOrder      Int                      @default(0)
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+  users          UserAchievement[]
+
+  @@index([category, isActive, sortOrder])
+}
+
+model UserAchievement {
+  id            String      @id @default(uuid())
+  userId        String
+  achievementId String
+  unlockedAt    DateTime    @default(now())
+  progress      Int         @default(0)
+  isSeen        Boolean     @default(false)
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@index([userId, unlockedAt])
+}
+
+model DailyTaskDefinition {
+  id           String          @id @default(uuid())
+  key          String          @unique
+  title        String
+  description  String
+  taskType     DailyTaskType
+  targetValue  Int
+  pointsReward Int
+  isActive     Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  userTasks    UserDailyTask[]
+
+  @@index([isActive, taskType])
+}
+
+model UserDailyTask {
+  id               String              @id @default(uuid())
+  userId           String
+  taskDefinitionId String
+  date             DateTime            @db.Date
+  progress         Int                 @default(0)
+  targetValue      Int
+  isCompleted      Boolean             @default(false)
+  completedAt      DateTime?
+  rewardClaimedAt  DateTime?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  user             User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taskDefinition   DailyTaskDefinition @relation(fields: [taskDefinitionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, taskDefinitionId, date])
+  @@index([userId, date, isCompleted])
+}
+
+model UserStreak {
+  id             String    @id @default(uuid())
+  userId         String    @unique
+  currentDays    Int       @default(0)
+  bestDays       Int       @default(0)
+  lastActiveDate DateTime? @db.Date
+  updatedAt      DateTime  @updatedAt
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AppUpdate {
+  id          String         @id @default(uuid())
+  title       String
+  body        String
+  category    UpdateCategory @default(GENERAL)
+  imageUrl    String?
+  actionType  String?
+  actionValue String?
+  isPublished Boolean        @default(false)
+  publishedAt DateTime?
+  createdById String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  deletedAt   DateTime?
+  createdBy   User           @relation("AppUpdateCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([isPublished, publishedAt, deletedAt])
+  @@index([category, publishedAt])
+}
+
+model Notification {
+  id           String           @id @default(uuid())
+  userId       String
+  type         NotificationType
+  title        String
+  body         String
+  data         Json?
+  dedupeKey    String?          @unique
+  isRead       Boolean          @default(false)
+  readAt       DateTime?
+  pushSentAt   DateTime?
+  pushAttempts Int              @default(0)
+  createdAt    DateTime         @default(now())
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt])
+  @@index([userId, createdAt])
+}
+
+model PushDevice {
+  id         String             @id @default(uuid())
+  userId     String
+  target     String             @unique
+  platform   PushDevicePlatform
+  isActive   Boolean            @default(true)
+  lastUsedAt DateTime           @default(now())
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isActive])
+}
+
+model Challenge {
+  id                     String                 @id @default(uuid())
+  mode                   ChallengeMode
+  status                 ChallengeStatus        @default(CREATED)
+  subjectId              String?
+  unitId                 String?
+  lessonId               String?
+  questionCount          Int
+  timePerQuestionSeconds Int
+  difficulty             QuestionDifficulty     @default(MIXED)
+  maxPlayers             Int                    @default(2)
+  createdById            String?
+  winnerUserId           String?
+  winnerTeam             Int?
+  startedAt              DateTime?
+  completedAt            DateTime?
+  expiresAt              DateTime?
+  inviteCode             String?                @unique
+  inviteExpiresAt        DateTime?
+  settings               Json
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+  subject                Subject?               @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  unit                   Unit?                  @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  lesson                 Lesson?                @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  createdBy              User?                  @relation("ChallengeCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  winner                 User?                  @relation("ChallengeWinner", fields: [winnerUserId], references: [id], onDelete: SetNull)
+  participants           ChallengeParticipant[]
+  questions              ChallengeQuestion[]
+  answers                ChallengeAnswer[]
+
+  @@index([status, mode, createdAt])
+  @@index([subjectId, difficulty, status])
+  @@index([expiresAt, status])
+}
+
+model ChallengeParticipant {
+  id              String                     @id @default(uuid())
+  challengeId     String
+  userId          String
+  status          ChallengeParticipantStatus @default(JOINED)
+  score           Int                        @default(0)
+  correctAnswers  Int                        @default(0)
+  wrongAnswers    Int                        @default(0)
+  combo           Int                        @default(0)
+  heartsRemaining Int?
+  team            Int?
+  rank            Int?
+  joinedAt        DateTime                   @default(now())
+  completedAt     DateTime?
+  challenge       Challenge                  @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  user            User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers         ChallengeAnswer[]
+
+  @@unique([challengeId, userId])
+  @@index([userId, joinedAt])
+  @@index([challengeId, status])
+  @@index([challengeId, team, status])
+}
+
+model ChallengeQuestion {
+  id          String    @id @default(uuid())
+  challengeId String
+  questionId  String
+  sortOrder   Int
+  createdAt   DateTime  @default(now())
+  challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  question    Question  @relation(fields: [questionId], references: [id], onDelete: Restrict)
+
+  @@unique([challengeId, questionId])
+  @@unique([challengeId, sortOrder])
+  @@index([questionId])
+}
+
+model ChallengeAnswer {
+  id               String               @id @default(uuid())
+  challengeId      String
+  participantId    String
+  questionId       String
+  selectedOptionId String?
+  selectedBoolean  Boolean?
+  isCorrect        Boolean
+  responseTimeMs   Int
+  pointsEarned     Int
+  answeredAt       DateTime             @default(now())
+  challenge        Challenge            @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  participant      ChallengeParticipant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  question         Question             @relation(fields: [questionId], references: [id], onDelete: Restrict)
+  selectedOption   QuestionOption?      @relation(fields: [selectedOptionId], references: [id], onDelete: SetNull)
+
+  @@unique([participantId, questionId])
+  @@index([challengeId, answeredAt])
+  @@index([questionId])
+}
+
+model UserSubjectFavorite {
+  id        String   @id @default(uuid())
+  userId    String
+  subjectId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, subjectId])
+  @@index([userId, createdAt])
+  @@index([subjectId])
+}
+
+model ServiceProvider {
+  id                       String                    @id @default(uuid())
+  key                      String                    @unique
+  displayNameInternal      String
+  providerType             ServiceProviderType
+  baseUrl                  String
+  authType                 ServiceProviderAuthType   @default(BEARER)
+  encryptedApiKey          String?
+  encryptedSecondarySecret String?
+  secretLastFour           String?
+  enabled                  Boolean                   @default(false)
+  priority                 Int                       @default(100)
+  timeoutMs                Int                       @default(30000)
+  maxRetries               Int                       @default(1)
+  supportsStreaming        Boolean                   @default(false)
+  metadataJson             Json?
+  healthStatus             ServiceHealthStatus       @default(DISABLED)
+  healthScore              Int                       @default(100)
+  lastHealthCheckAt        DateTime?
+  createdById              String
+  updatedById              String
+  createdAt                DateTime                  @default(now())
+  updatedAt                DateTime                  @updatedAt
+  models                   ServiceModel[]
+  credentialAudits         ProviderCredentialAudit[]
+
+  @@index([enabled, priority])
+  @@index([healthStatus])
+}
+
+model ServiceModel {
+  id                   String                    @id @default(uuid())
+  providerId           String
+  internalName         String
+  remoteModelId        String
+  enabled              Boolean                   @default(false)
+  supportsText         Boolean                   @default(true)
+  supportsVision       Boolean                   @default(false)
+  supportsImages       Boolean                   @default(false)
+  supportsEmbeddings   Boolean                   @default(false)
+  supportsTools        Boolean                   @default(false)
+  supportsJsonMode     Boolean                   @default(false)
+  supportsStreaming    Boolean                   @default(false)
+  supportsLongContext  Boolean                   @default(false)
+  supportsReasoning    Boolean                   @default(false)
+  contextWindow        Int                       @default(8192)
+  maxOutputTokens      Int                       @default(2048)
+  inputCostPerMillion  Decimal                   @default(0) @db.Decimal(14, 6)
+  outputCostPerMillion Decimal                   @default(0) @db.Decimal(14, 6)
+  imageCost            Decimal                   @default(0) @db.Decimal(14, 6)
+  currency             String                    @default("USD")
+  latencyClass         Int                       @default(3)
+  qualityClass         Int                       @default(3)
+  metadataJson         Json?
+  healthStatus         ServiceHealthStatus       @default(DISABLED)
+  averageLatencyMs     Int?
+  successRate          Decimal?                  @db.Decimal(5, 2)
+  createdAt            DateTime                  @default(now())
+  updatedAt            DateTime                  @updatedAt
+  provider             ServiceProvider           @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  routingCandidates    RoutingCandidate[]
+  chunkEmbeddings      KnowledgeChunkEmbedding[]
+
+  @@unique([providerId, remoteModelId])
+  @@index([enabled, healthStatus])
+  @@index([supportsText, supportsVision, supportsEmbeddings])
+}
+
+model RoutingPolicy {
+  id                    String             @id @default(uuid())
+  taskType              ServiceTaskType
+  nameInternal          String
+  enabled               Boolean            @default(false)
+  strategy              RoutingStrategy    @default(PRIORITY)
+  primaryModelId        String?
+  maxFallbacks          Int                @default(2)
+  requiredVision        Boolean            @default(false)
+  requiredJsonMode      Boolean            @default(false)
+  minContextWindow      Int                @default(0)
+  maxEstimatedCost      Decimal?           @db.Decimal(14, 6)
+  timeoutMs             Int                @default(30000)
+  temperature           Decimal            @default(0.2) @db.Decimal(3, 2)
+  maxOutputTokens       Int                @default(1024)
+  systemPromptVersionId String?
+  knowledgeBaseId       String?
+  routingVersion        Int                @default(1)
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  candidates            RoutingCandidate[]
+
+  @@unique([taskType, nameInternal])
+  @@index([taskType, enabled])
+}
+
+model RoutingCandidate {
+  id                   String        @id @default(uuid())
+  routingPolicyId      String
+  modelId              String
+  priority             Int           @default(100)
+  weight               Int           @default(1)
+  enabled              Boolean       @default(true)
+  maxRequestsPerMinute Int?
+  maxRequestsPerDay    Int?
+  maxCostPerDay        Decimal?      @db.Decimal(14, 6)
+  conditionsJson       Json?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  routingPolicy        RoutingPolicy @relation(fields: [routingPolicyId], references: [id], onDelete: Cascade)
+  model                ServiceModel  @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@unique([routingPolicyId, modelId])
+  @@index([routingPolicyId, enabled, priority])
+  @@index([modelId])
+}
+
+model PromptTemplate {
+  id                 String          @id @default(uuid())
+  key                String
+  nameInternal       String
+  taskType           ServiceTaskType
+  systemPrompt       String
+  developerPrompt    String?
+  responseSchemaJson Json?
+  version            Int
+  active             Boolean         @default(false)
+  createdById        String
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@unique([key, version])
+  @@index([taskType, active])
+}
+
+model KnowledgeBase {
+  id                    String              @id @default(uuid())
+  name                  String
+  description           String?
+  enabled               Boolean             @default(false)
+  scope                 KnowledgeBaseScope
+  subjectId             String?
+  gradeId               String?
+  language              String              @default("ar")
+  retrievalSettingsJson Json?
+  version               Int                 @default(1)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  documents             KnowledgeDocument[]
+  chunks                KnowledgeChunk[]
+
+  @@index([scope, enabled])
+  @@index([subjectId, gradeId])
+}
+
+model KnowledgeDocument {
+  id                    String                  @id @default(uuid())
+  knowledgeBaseId       String
+  title                 String
+  originalFileName      String
+  storagePath           String
+  mimeType              String
+  fileSize              Int
+  checksum              String
+  status                KnowledgeDocumentStatus @default(UPLOADED)
+  enabled               Boolean                 @default(true)
+  language              String                  @default("ar")
+  pageCount             Int?
+  chunkCount            Int                     @default(0)
+  embeddedChunkCount    Int                     @default(0)
+  failedChunkCount      Int                     @default(0)
+  embeddingModelVersion String?
+  lastEmbeddedAt        DateTime?
+  ocrPageCount          Int                     @default(0)
+  subjectId             String?
+  unitId                String?
+  lessonId              String?
+  sourceId              String?
+  uploadedById          String
+  extractionError       String?
+  createdAt             DateTime                @default(now())
+  processedAt           DateTime?
+  updatedAt             DateTime                @updatedAt
+  knowledgeBase         KnowledgeBase           @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
+  chunks                KnowledgeChunk[]
+
+  @@unique([knowledgeBaseId, checksum])
+  @@index([knowledgeBaseId, status, enabled])
+  @@index([subjectId, unitId, lessonId])
+}
+
+model KnowledgeChunk {
+  id                       String                    @id @default(uuid())
+  documentId               String
+  knowledgeBaseId          String
+  content                  String
+  pageNumber               Int?
+  sectionTitle             String?
+  chunkIndex               Int
+  tokenCount               Int
+  contentChecksum          String
+  searchVector             Unsupported("tsvector")?  @default(dbgenerated("to_tsvector('simple'::regconfig, COALESCE(content, ''::text))"))
+  metadataJson             Json?
+  embeddingRef             String?
+  createdAt                DateTime                  @default(now())
+  document                 KnowledgeDocument         @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  knowledgeBase            KnowledgeBase             @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
+  knowledgeChunkEmbeddings KnowledgeChunkEmbedding[]
+
+  @@unique([documentId, chunkIndex])
+  @@index([knowledgeBaseId])
+  @@index([documentId])
+  @@index([searchVector], type: Gin, map: "KnowledgeChunk_searchVector_gin_idx")
+}
+
+model KnowledgeChunkEmbedding {
+  id              String                   @id @default(uuid())
+  chunkId         String
+  modelId         String
+  dimensions      Int
+  contentChecksum String
+  status          KnowledgeEmbeddingStatus @default(PENDING)
+  errorCode       String?
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+  chunk           KnowledgeChunk           @relation(fields: [chunkId], references: [id], onDelete: Cascade)
+  model           ServiceModel             @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@unique([chunkId, modelId])
+  @@index([modelId, dimensions, status])
+  @@index([chunkId, status])
+}
+
+model FeatureUsagePolicy {
+  id               String          @id @default(uuid())
+  taskType         ServiceTaskType
+  enabled          Boolean         @default(false)
+  userDailyLimit   Int             @default(0)
+  userMonthlyLimit Int             @default(0)
+  globalDailyLimit Int             @default(0)
+  maxInputTokens   Int             @default(4096)
+  maxOutputTokens  Int             @default(1024)
+  maxImages        Int             @default(0)
+  maxImageSize     Int             @default(0)
+  maxDocumentPages Int             @default(0)
+  allowedRoles     Json
+  subscriptionTier String?
+  cooldownSeconds  Int             @default(0)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@unique([taskType, subscriptionTier])
+  @@index([taskType, enabled])
+}
+
+model ServiceRequestLog {
+  id                 String               @id @default(uuid())
+  requestId          String               @unique
+  idempotencyKey     String?
+  userId             String?
+  taskType           ServiceTaskType
+  routingPolicyId    String?
+  selectedModelId    String?
+  selectedProviderId String?
+  status             ServiceRequestStatus @default(PENDING)
+  inputTokenCount    Int                  @default(0)
+  outputTokenCount   Int                  @default(0)
+  imageCount         Int                  @default(0)
+  latencyMs          Int?
+  estimatedCost      Decimal              @default(0) @db.Decimal(14, 6)
+  fallbackCount      Int                  @default(0)
+  errorCode          String?
+  cacheHit           Boolean              @default(false)
+  knowledgeUsed      Boolean              @default(false)
+  promptVersion      Int?
+  createdAt          DateTime             @default(now())
+
+  @@unique([userId, idempotencyKey])
+  @@index([taskType, createdAt])
+  @@index([status, createdAt])
+  @@index([selectedProviderId, selectedModelId, createdAt])
+}
+
+model ProviderCredentialAudit {
+  id             String                        @id @default(uuid())
+  providerId     String
+  actorId        String
+  action         ProviderCredentialAuditAction
+  secretLastFour String?
+  succeeded      Boolean
+  errorCode      String?
+  createdAt      DateTime                      @default(now())
+  provider       ServiceProvider               @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId, createdAt])
+  @@index([actorId, createdAt])
+}
+
+// ==========================================
+// Added Domains: Support, Announcements, Subscriptions, Settings
+// ==========================================
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_ON_USER
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum AnnouncementType {
+  INFO
+  WARNING
+  SUCCESS
+  ERROR
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  TRIALING
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+model SupportTicket {
+  id        String          @id @default(uuid())
+  userId    String
+  subject   String
+  category  String
+  status    TicketStatus    @default(OPEN)
+  priority  TicketPriority  @default(MEDIUM)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  user      User            @relation(fields: [userId], references: [id], onDelete: Restrict)
+  messages  TicketMessage[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model TicketMessage {
+  id         String        @id @default(uuid())
+  ticketId   String
+  senderId   String
+  content    String
+  isInternal Boolean       @default(false)
+  createdAt  DateTime      @default(now())
+  ticket     SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  sender     User          @relation(fields: [senderId], references: [id], onDelete: Restrict)
+
+  @@index([ticketId])
+  @@index([senderId])
+}
+
+model SystemAnnouncement {
+  id          String           @id @default(uuid())
+  title       String
+  content     String
+  type        AnnouncementType @default(INFO)
+  isActive    Boolean          @default(true)
+  targetRoles UserRole[]
+  expiresAt   DateTime?
+  createdById String
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  createdBy   User             @relation("AnnouncementCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([isActive, expiresAt])
+}
+
+model UserSubscription {
+  id           String               @id @default(uuid())
+  userId       String
+  planId       String
+  status       SubscriptionStatus   @default(ACTIVE)
+  startDate    DateTime
+  endDate      DateTime
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  user         User                 @relation(fields: [userId], references: [id], onDelete: Restrict)
+  transactions PaymentTransaction[]
+
+  @@index([userId, status])
+}
+
+model PaymentTransaction {
+  id             String            @id @default(uuid())
+  userId         String
+  subscriptionId String?
+  amount         Float
+  currency       String            @default("USD")
+  status         PaymentStatus     @default(PENDING)
+  paymentMethod  String?
+  reference      String?           @unique
+  createdAt      DateTime          @default(now())
+  user           User              @relation(fields: [userId], references: [id], onDelete: Restrict)
+  subscription   UserSubscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+}
+
+model SystemSetting {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String
+  description String?
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([key])
+}

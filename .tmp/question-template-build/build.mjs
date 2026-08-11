@@ -1,0 +1,30 @@
+import fs from "node:fs/promises";
+import { SpreadsheetFile, Workbook } from "@oai/artifact-tool";
+
+const wb = Workbook.create();
+const q = wb.worksheets.add("Questions");
+const i = wb.worksheets.add("Instructions");
+const a = wb.worksheets.add("AllowedValues");
+const e = wb.worksheets.add("Example");
+const h = ["external_id","subject","unit","lesson","source","year","question_type","question_text","passage_external_id","option_1","option_1_is_correct","option_1_why_wrong","option_2","option_2_is_correct","option_2_why_wrong","option_3","option_3_is_correct","option_3_why_wrong","option_4","option_4_is_correct","option_4_why_wrong","correct_answer_text","hint_text","explanation_short","explanation_detailed","difficulty","tags","image_file","review_status","publish"];
+const header = { fill: "#173F5F", font: { bold: true, color: "#FFFFFF" }, wrapText: true, horizontalAlignment: "center", verticalAlignment: "center" };
+q.getRange("A1:AD1").values = [h]; q.getRange("A1:AD1").format = header;
+q.getRange("A1:AD1000").format.borders = { preset: "all", style: "thin", color: "#E5E7EB" };
+q.getRange("A2:AD1000").format.wrapText = true; q.getRange("H2:H1000").format.columnWidth = 52;
+for (const c of ["J","M","P","S"]) q.getRange(`${c}2:${c}1000`).format.columnWidth = 30;
+q.freezePanes.freezeRows(1); q.showGridLines = false;
+q.getRange("G2:G1000").dataValidation = { rule: { type: "list", values: ["MULTIPLE_CHOICE","TRUE_FALSE"] } };
+for (const c of ["K","N","Q","T","AD"]) q.getRange(`${c}2:${c}1000`).dataValidation = { rule: { type: "list", values: ["true","false"] } };
+q.getRange("Z2:Z1000").dataValidation = { rule: { type: "list", values: ["EASY","MEDIUM","HARD"] } };
+q.getRange("AC2:AC1000").dataValidation = { rule: { type: "list", values: ["DRAFT","REVIEW_REQUIRED","READY","REJECTED","ARCHIVED"] } };
+q.getRange("F2:F1000").dataValidation = { rule: { type: "whole", operator: "between", formula1: 1900, formula2: 2200 } };
+i.getRange("A1:F1").merge(); i.getRange("A1:F1").values = [["قالب استيراد بنك الأسئلة — تعليمات الاستخدام"]]; i.getRange("A1:F1").format = header;
+i.getRange("A3:B12").values = [["القاعدة","التفصيل"],["ورقة الإدخال","أدخل البيانات في Questions فقط ولا تغيّر أسماء الأعمدة."],["المراجعة","كل استيراد يمر بـDry Run ومراجعة بشرية قبل التأكيد."],["MCQ","خياران على الأقل وإجابة صحيحة واحدة فقط."],["TRUE_FALSE","اترك الخيارات فارغة واكتب صح أو خطأ في correct_answer_text."],["المناهج","استخدم أسماء معتمدة؛ لا يتم التخمين."],["الصور","في ZIP استخدم مسارًا نسبيًا آمنًا في image_file."],["الحماية","لا تضع صيغ Excel أو بيانات حساسة."],["النشر","publish=false افتراضيًا؛ النشر بعد READY فقط."],["الترميز","احفظ الآيات والمعادلات والنص الأصلي دون تغيير."]];
+i.getRange("A3:B3").format = { fill: "#20639B", font: { bold: true, color: "#FFFFFF" } }; i.getRange("A3:B12").format.borders = { preset: "all", style: "thin", color: "#CBD5E1" }; i.getRange("A3:B12").format.wrapText = true; i.getRange("A1:A12").format.columnWidth = 24; i.getRange("B1:B12").format.columnWidth = 80; i.showGridLines = false;
+a.getRange("A1:D6").values = [["question_type","boolean","difficulty","review_status"],["MULTIPLE_CHOICE","true","EASY","DRAFT"],["TRUE_FALSE","false","MEDIUM","REVIEW_REQUIRED"],[null,null,"HARD","READY"],[null,null,null,"REJECTED"],[null,null,null,"ARCHIVED"]]; a.getRange("A1:D1").format = header; a.getRange("A1:D6").format.borders = { preset: "all", style: "thin", color: "#CBD5E1" }; a.getRange("A1:D6").format.columnWidth = 24; a.showGridLines = false;
+e.getRange("A1:AD2").values = [h,["example-001","الفيزياء","الحركة","المقذوفات","اختبار تجريبي",2026,"MULTIPLE_CHOICE","ما العبارة الصحيحة؟",null,"الخيار الأول",true,null,"الخيار الثاني",false,"لا يطابق المعطيات","الخيار الثالث",false,null,"الخيار الرابع",false,null,null,"راجع تعريف المفهوم","شرح مختصر موثق","شرح تفصيلي للمراجع","MEDIUM","فيزياء,تجريبي",null,"DRAFT",false]]; e.getRange("A1:AD1").format = header; e.getRange("A1:AD2").format.borders = { preset: "all", style: "thin", color: "#CBD5E1" }; e.getRange("A1:AD2").format.wrapText = true; e.getRange("H1:H2").format.columnWidth = 52; e.freezePanes.freezeRows(1); e.showGridLines = false;
+const out = "D:/three/outputs/question-import-template"; await fs.mkdir(out,{recursive:true}); await fs.mkdir("D:/three/admin-dashboard/public",{recursive:true});
+const file = await SpreadsheetFile.exportXlsx(wb); await file.save(`${out}/question-import-template.xlsx`); await file.save("D:/three/admin-dashboard/public/question-import-template.xlsx");
+const check = await wb.inspect({kind:"sheet,region,formula",range:"A1:AD12",maxChars:10000,tableMaxRows:12,tableMaxCols:30}); await fs.writeFile(`${out}/inspection.txt`,check.ndjson ?? String(check),"utf8");
+for (const name of ["Questions","Instructions","AllowedValues","Example"]) { const p=await wb.render({sheetName:name,autoCrop:"all",scale:1,format:"png"}); await fs.writeFile(`${out}/${name}.png`,new Uint8Array(await p.arrayBuffer())); }
+console.log(`${out}/question-import-template.xlsx`);

@@ -1,0 +1,129 @@
+
+// ==========================================
+// Added Domains: Support, Announcements, Subscriptions, Settings
+// ==========================================
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_ON_USER
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum AnnouncementType {
+  INFO
+  WARNING
+  SUCCESS
+  ERROR
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  TRIALING
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+model SupportTicket {
+  id          String           @id @default(uuid())
+  userId      String
+  subject     String
+  category    String
+  status      TicketStatus     @default(OPEN)
+  priority    TicketPriority   @default(MEDIUM)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  user        User             @relation(fields: [userId], references: [id], onDelete: Restrict)
+  messages    TicketMessage[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model TicketMessage {
+  id          String        @id @default(uuid())
+  ticketId    String
+  senderId    String
+  content     String
+  isInternal  Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  sender      User          @relation(fields: [senderId], references: [id], onDelete: Restrict)
+
+  @@index([ticketId])
+  @@index([senderId])
+}
+
+model SystemAnnouncement {
+  id           String           @id @default(uuid())
+  title        String
+  content      String
+  type         AnnouncementType @default(INFO)
+  isActive     Boolean          @default(true)
+  targetRoles  UserRole[]
+  expiresAt    DateTime?
+  createdById  String
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  createdBy    User             @relation("AnnouncementCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([isActive, expiresAt])
+}
+
+model UserSubscription {
+  id          String             @id @default(uuid())
+  userId      String
+  planId      String
+  status      SubscriptionStatus @default(ACTIVE)
+  startDate   DateTime
+  endDate     DateTime
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  user        User               @relation(fields: [userId], references: [id], onDelete: Restrict)
+  transactions PaymentTransaction[]
+
+  @@index([userId, status])
+}
+
+model PaymentTransaction {
+  id             String           @id @default(uuid())
+  userId         String
+  subscriptionId String?
+  amount         Float
+  currency       String           @default("USD")
+  status         PaymentStatus    @default(PENDING)
+  paymentMethod  String?
+  reference      String?          @unique
+  createdAt      DateTime         @default(now())
+  user           User             @relation(fields: [userId], references: [id], onDelete: Restrict)
+  subscription   UserSubscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+}
+
+model SystemSetting {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String
+  description String?
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([key])
+}

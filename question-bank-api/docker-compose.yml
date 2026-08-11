@@ -1,0 +1,123 @@
+services:
+  api:
+    build:
+      context: .
+      target: runtime
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      API_PREFIX: api/v1
+      DATABASE_URL: postgresql://${POSTGRES_USER:-question_bank}:${POSTGRES_PASSWORD:-local_change_me}@postgres:5432/${POSTGRES_DB:-question_bank}?schema=public
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?set JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?set JWT_REFRESH_SECRET}
+      JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-15m}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-30d}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 0
+      REDIS_TLS: "false"
+      FCM_ENABLED: ${FCM_ENABLED:-false}
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-}
+      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-}
+      QUESTION_IMPORT_ENABLED: ${QUESTION_IMPORT_ENABLED:-true}
+      QUESTION_IMPORT_MAX_FILE_MB: ${QUESTION_IMPORT_MAX_FILE_MB:-25}
+      QUESTION_IMPORT_BATCH_SIZE: ${QUESTION_IMPORT_BATCH_SIZE:-100}
+      QUESTION_IMPORT_STORAGE_PATH: /app/storage/question-imports
+      QUESTION_EXPORT_MAX_ROWS: ${QUESTION_EXPORT_MAX_ROWS:-50000}
+      QUESTION_IMAGE_MAX_MB: ${QUESTION_IMAGE_MAX_MB:-8}
+      QUESTION_ZIP_MAX_UNCOMPRESSED_MB: ${QUESTION_ZIP_MAX_UNCOMPRESSED_MB:-250}
+    volumes:
+      - question_imports:/app/storage/question-imports
+      - question_media:/app/storage/question-media
+      - question_exports:/app/storage/question-exports
+    ports:
+      - "${API_PORT:-3000}:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/v1/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  migrate:
+    build:
+      context: .
+      target: migration
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-question_bank}:${POSTGRES_PASSWORD:-local_change_me}@postgres:5432/${POSTGRES_DB:-question_bank}?schema=public
+    restart: "no"
+
+  question-import-worker:
+    build:
+      context: .
+      target: runtime
+    command: ["node", "dist/src/question-import-worker.js"]
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-question_bank}:${POSTGRES_PASSWORD:-local_change_me}@postgres:5432/${POSTGRES_DB:-question_bank}?schema=public
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      QUESTION_IMPORT_ENABLED: ${QUESTION_IMPORT_ENABLED:-true}
+      QUESTION_IMPORT_BATCH_SIZE: ${QUESTION_IMPORT_BATCH_SIZE:-100}
+      QUESTION_IMPORT_WORKER_CONCURRENCY: ${QUESTION_IMPORT_WORKER_CONCURRENCY:-1}
+      QUESTION_IMPORT_STORAGE_PATH: /app/storage/question-imports
+    volumes:
+      - question_imports:/app/storage/question-imports
+      - question_media:/app/storage/question-media
+      - question_exports:/app/storage/question-exports
+    healthcheck:
+      test: ["CMD", "node", "-e", "process.exit(0)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    stop_grace_period: 45s
+
+  postgres:
+    image: postgres:16-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-question_bank}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local_change_me}
+      POSTGRES_DB: ${POSTGRES_DB:-question_bank}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-question_bank} -d ${POSTGRES_DB:-question_bank}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7.4-bookworm
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres_data:
+  redis_data:
+  question_imports:
+  question_media:
+  question_exports:

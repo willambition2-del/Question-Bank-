@@ -1,0 +1,139 @@
+name: question-bank-production
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7.4-bookworm
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --requirepass
+      - ${REDIS_PASSWORD:?set REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a '$$REDIS_PASSWORD' ping | grep PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?set REDIS_PASSWORD}
+
+  migrate:
+    build:
+      context: ./question-bank-api
+      target: migration
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
+
+  api:
+    build:
+      context: ./question-bank-api
+      target: runtime
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    env_file: ./.env.production
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3000
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      STORAGE_DRIVER: local
+      DOCUMENT_STORAGE_PATH: /data/knowledge
+      VECTOR_SEARCH_ENABLED: "true"
+      OCR_CACHE_PATH: /home/node/.cache/tesseract
+    volumes:
+      - knowledge_data:/data/knowledge
+      - ocr_cache:/home/node/.cache/tesseract
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/v1/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 45s
+
+  document-worker:
+    build:
+      context: ./question-bank-api
+      target: runtime
+    command: ["node", "dist/src/document-worker.js"]
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    env_file: ./.env.production
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      STORAGE_DRIVER: local
+      DOCUMENT_STORAGE_PATH: /data/knowledge
+      VECTOR_SEARCH_ENABLED: "true"
+      OCR_CACHE_PATH: /home/node/.cache/tesseract
+    volumes:
+      - knowledge_data:/data/knowledge
+      - ocr_cache:/home/node/.cache/tesseract
+
+  admin:
+    build:
+      context: ./admin-dashboard
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      BACKEND_INTERNAL_URL: http://api:3000/api/v1
+      NEXT_PUBLIC_APP_URL: ${ADMIN_PUBLIC_URL:?set ADMIN_PUBLIC_URL}
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+      admin:
+        condition: service_started
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./ops/nginx/question-bank.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./ops/certs:/etc/nginx/certs:ro
+
+volumes:
+  postgres_data:
+  redis_data:
+  knowledge_data:
+  ocr_cache:
