@@ -5,9 +5,18 @@
 node_modules/
 .next/
 dist/
+build/
 coverage/
 out/
 
+# Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+
+# Database & Backups
 *.sqlite
 *.sqlite3
 *.db
@@ -16,6 +25,8 @@ out/
 *.sql
 !backend/prisma/migrations/**/
 !backend/prisma/migrations/**/migration.sql
+!question-bank-api/prisma/migrations/**/
+!question-bank-api/prisma/migrations/**/migration.sql
 
 uploads/
 storage/
@@ -23,9 +34,16 @@ backups/
 tmp/
 logs/
 
+# Credentials & Keys
 *.jks
 *.keystore
 key.properties
+*.pem
+*.key
+.key
+*.p12
+service-account.json
+*service-account*.json
 google-services.json
 GoogleService-Info.plist
 
