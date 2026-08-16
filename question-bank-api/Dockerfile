@@ -2,7 +2,7 @@ FROM node:22.17.1-bookworm-slim AS base
 WORKDIR /app
 ENV NODE_ENV=production
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends ca-certificates openssl \
+  && apt-get install -y --no-install-recommends ca-certificates openssl python3 make g++ \
   && rm -rf /var/lib/apt/lists/* \
   && mkdir -p /home/node/.cache/tesseract \
   && chown -R node:node /home/node/.cache
