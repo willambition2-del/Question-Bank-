@@ -7,6 +7,7 @@ import { IntelligentServicesAdminService } from './admin/intelligent-services-ad
 import { AssistantController } from './assistant/assistant.controller';
 import { AssistantResponseValidator } from './assistant/assistant-response-validator.service';
 import { AssistantService } from './assistant/assistant.service';
+import { AiAssistantSettingsService } from './assistant/ai-assistant-settings.service';
 import { AssistantCacheService } from './assistant/assistant-cache.service';
 import { ImageQuestionService } from './assistant/image-question.service';
 import { ImageUploadValidator } from './assistant/image-upload-validator.service';
@@ -43,6 +44,7 @@ import { UsageGovernanceService } from './usage/usage-governance.service';
   ],
   providers: [
     IntelligentServicesAdminService,
+    AiAssistantSettingsService,
     AssistantService,
     AssistantCacheService,
     ImageQuestionService,
@@ -75,6 +77,7 @@ import { UsageGovernanceService } from './usage/usage-governance.service';
   ],
   exports: [
     AssistantService,
+    AiAssistantSettingsService,
     AssistantCacheService,
     ImageQuestionService,
     ImageUploadValidator,

@@ -27,6 +27,7 @@ import { SupportModule } from './support/support.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
 import { BillingModule } from './billing/billing.module';
 import { SettingsModule } from './settings/settings.module';
+import { StudyResourcesModule } from './study-resources/study-resources.module';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { SettingsModule } from './settings/settings.module';
     AnnouncementsModule,
     BillingModule,
     SettingsModule,
+    StudyResourcesModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

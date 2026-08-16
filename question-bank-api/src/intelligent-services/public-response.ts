@@ -14,6 +14,11 @@ export interface AssistantResponse {
   sourceReferences: AssistantSourceReference[];
   usage: {
     remainingToday: number | null;
+    remaining?: number | null;
+    used?: number;
+    limit?: number;
+    resetPeriod?: string;
+    resetAt?: string | null;
   };
 }
 

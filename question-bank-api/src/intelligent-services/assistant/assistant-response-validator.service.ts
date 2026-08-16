@@ -13,7 +13,17 @@ export class AssistantResponseValidator {
     requestId: string,
     response: NormalizedProviderResponse,
     retrieved: RetrievedKnowledge[] = [],
-    remainingToday: number | null = null,
+    remainingTodayOrUsage:
+      | number
+      | null
+      | {
+          remainingToday?: number | null;
+          remaining?: number | null;
+          used?: number;
+          limit?: number;
+          resetPeriod?: string;
+          resetAt?: string | null;
+        } = null,
   ): AssistantResponse {
     const value = response.structured ?? this.parseJson(response.text);
     const summary = this.string(value.summary) ?? response.text.trim();
@@ -33,6 +43,19 @@ export class AssistantResponseValidator {
     const sourceReferences = requestedSources
       .map((source) => this.validSource(source, allowedSources))
       .filter((source): source is AssistantSourceReference => source !== null);
+
+    const usage =
+      typeof remainingTodayOrUsage === 'object' && remainingTodayOrUsage !== null
+        ? {
+            remainingToday: remainingTodayOrUsage.remainingToday ?? remainingTodayOrUsage.remaining ?? null,
+            remaining: remainingTodayOrUsage.remaining ?? null,
+            used: remainingTodayOrUsage.used,
+            limit: remainingTodayOrUsage.limit,
+            resetPeriod: remainingTodayOrUsage.resetPeriod,
+            resetAt: remainingTodayOrUsage.resetAt,
+          }
+        : { remainingToday: remainingTodayOrUsage };
+
     const result: AssistantResponse = {
       requestId,
       status: 'COMPLETED',
@@ -41,7 +64,7 @@ export class AssistantResponseValidator {
       keyConcept: this.string(value.keyConcept),
       commonMistake: this.string(value.commonMistake),
       sourceReferences: this.uniqueSources(sourceReferences),
-      usage: { remainingToday },
+      usage,
     };
     assertPublicResponsePrivacy(result);
     return result;

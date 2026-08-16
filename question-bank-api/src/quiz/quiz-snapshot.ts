@@ -108,6 +108,7 @@ export function toStudentSnapshot(snapshot: QuizQuestionSnapshot) {
     isTrapQuestion: snapshot.isTrapQuestion,
     contentVersion: snapshot.contentVersion,
     readingPassage: snapshot.readingPassage,
+    hintText: snapshot.hintText,
     options: snapshot.options.map(
       ({ id, optionText, optionImageUrl, sortOrder }) => ({
         id,

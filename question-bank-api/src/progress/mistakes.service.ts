@@ -23,6 +23,7 @@ export class MistakesService {
     const where: Prisma.StudentQuestionProgressWhereInput = {
       userId,
       wrongCount: { gte: query.minWrongCount },
+      lastAnswerCorrect: false,
       ...(query.mastered !== undefined ? { isMastered: query.mastered } : {}),
       ...(query.reviewed !== undefined
         ? { manualReviewedAt: query.reviewed ? { not: null } : null }
@@ -51,6 +52,7 @@ export class MistakesService {
         userId,
         questionId,
         wrongCount: { gt: 0 },
+        lastAnswerCorrect: false,
         question: visibleQuestionWhere(),
       },
       include: mistakeInclude,

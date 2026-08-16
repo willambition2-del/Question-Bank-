@@ -17,6 +17,8 @@ import {
   QuestionContextService,
 } from './question-context.service';
 
+import { AiAssistantSettingsService } from './ai-assistant-settings.service';
+
 const RESPONSE_SCHEMA = {
   type: 'object',
   additionalProperties: false,
@@ -57,7 +59,12 @@ export class AssistantService {
     private readonly retrieval: KnowledgeRetrievalService,
     private readonly responses: AssistantResponseValidator,
     private readonly cache: AssistantCacheService,
+    private readonly aiAssistantSettings: AiAssistantSettingsService,
   ) {}
+
+  getUsage(userId: string) {
+    return this.aiAssistantSettings.getUsageStatus(userId);
+  }
 
   chat(userId: string, dto: AssistantChatDto) {
     return this.generate(
@@ -211,6 +218,7 @@ export class AssistantService {
     requestId = randomUUID(),
     cacheable = false,
   ): Promise<AssistantResponse> {
+    const usage = await this.aiAssistantSettings.assertAndConsumeMessage(userId);
     const { template, messages } = await this.prompts.messages(
       taskType,
       content,
@@ -221,7 +229,14 @@ export class AssistantService {
         return {
           ...cached,
           requestId,
-          usage: { remainingToday: null },
+          usage: {
+            remainingToday: usage.remaining,
+            remaining: usage.remaining,
+            used: usage.used,
+            limit: usage.limit,
+            resetPeriod: usage.resetPeriod,
+            resetAt: usage.resetAt,
+          },
         };
       }
     }
@@ -241,7 +256,7 @@ export class AssistantService {
       requestId,
       response,
       retrieved,
-      response.quotaRemainingToday,
+      usage,
     );
     if (cacheable) {
       await this.cache.set(taskType, content, template.version, normalized);

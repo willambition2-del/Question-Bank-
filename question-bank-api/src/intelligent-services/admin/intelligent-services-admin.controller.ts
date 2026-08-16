@@ -40,6 +40,10 @@ import {
   UpdateRouteDto,
   UpdateUsagePolicyDto,
 } from './dto/intelligent-services-admin.dto';
+import {
+  UpdateAiAssistantSettingsDto,
+  UserUsageQueryDto,
+} from '../assistant/dto/ai-assistant-settings.dto';
 import { IntelligentServicesAdminService } from './intelligent-services-admin.service';
 
 @ApiTags('Admin Intelligent Services')
@@ -48,6 +52,27 @@ import { IntelligentServicesAdminService } from './intelligent-services-admin.se
 @Roles(UserRole.SUPER_ADMIN)
 export class IntelligentServicesAdminController {
   constructor(private readonly admin: IntelligentServicesAdminService) {}
+
+  @Get('assistant-settings')
+  @ApiOperation({ summary: 'Get unified AI assistant settings' })
+  assistantSettings() {
+    return this.data(this.admin.assistantSettings());
+  }
+
+  @Patch('assistant-settings')
+  @ApiOperation({ summary: 'Update unified AI assistant settings and limits' })
+  updateAssistantSettings(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Body() dto: UpdateAiAssistantSettingsDto,
+  ) {
+    return this.data(this.admin.updateAssistantSettings(actor.userId, dto));
+  }
+
+  @Get('user-usage')
+  @ApiOperation({ summary: 'List student message consumption for the current reset period' })
+  userUsage(@Query() query: UserUsageQueryDto) {
+    return this.data(this.admin.userUsage(query));
+  }
 
   @Get('providers')
   providers() {

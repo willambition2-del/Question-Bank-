@@ -67,14 +67,6 @@ export class UsersService {
     });
   }
 
-  findByEmail(email: string): Promise<User | null> {
-    return this.prisma.user.findFirst({
-      where: {
-        deletedAt: null,
-        email: email.toLowerCase(),
-      },
-    });
-  }
 
   async createStudent(input: CreateStudentInput): Promise<User> {
     try {

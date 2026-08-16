@@ -35,6 +35,11 @@ import type {
   UpdateRouteDto,
   UpdateUsagePolicyDto,
 } from './dto/intelligent-services-admin.dto';
+import { AiAssistantSettingsService } from '../assistant/ai-assistant-settings.service';
+import type {
+  UpdateAiAssistantSettingsDto,
+  UserUsageQueryDto,
+} from '../assistant/dto/ai-assistant-settings.dto';
 
 @Injectable()
 export class IntelligentServicesAdminService {
@@ -47,7 +52,20 @@ export class IntelligentServicesAdminService {
     private readonly retrieval: KnowledgeRetrievalService,
     private readonly ingestion: DocumentIngestionService,
     private readonly vectors: VectorExtensionService,
+    private readonly assistantSettingsService: AiAssistantSettingsService,
   ) {}
+
+  assistantSettings() {
+    return this.assistantSettingsService.getSettings();
+  }
+
+  updateAssistantSettings(actorId: string, dto: UpdateAiAssistantSettingsDto) {
+    return this.assistantSettingsService.updateSettings(actorId, dto);
+  }
+
+  userUsage(query: UserUsageQueryDto) {
+    return this.assistantSettingsService.listUserUsage(query);
+  }
 
   async providers() {
     const providers = await this.prisma.serviceProvider.findMany({

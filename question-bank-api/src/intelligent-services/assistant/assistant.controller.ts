@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Param,
   ParseUUIDPipe,
   Post,
@@ -37,6 +38,12 @@ export class AssistantController {
     private readonly assistant: AssistantService,
     private readonly images: ImageQuestionService,
   ) {}
+
+  @Get('usage')
+  @ApiOperation({ summary: 'Get current student assistant usage and limits status' })
+  usage(@CurrentUser() actor: AuthenticatedUser) {
+    return this.data(this.assistant.getUsage(actor.userId));
+  }
 
   @Post('images/analyze-question')
   @Roles(UserRole.STUDENT)
