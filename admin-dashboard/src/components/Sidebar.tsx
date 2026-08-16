@@ -32,7 +32,8 @@ import {
   Settings,
   BrainCircuit,
   Wrench,
-  Gauge
+  Gauge,
+  Library
 } from "lucide-react";
 
 type NavItem = {
@@ -75,6 +76,7 @@ export function Sidebar() {
       icon: FolderTree,
       items: [
         { name: "المنهج", href: "/education", icon: BookOpenText },
+        { name: "المنهج والملفات", href: "/curriculum", icon: Library },
         { name: "بنك الأسئلة", href: "/questions", icon: HelpCircle },
         { name: "القطع القرائية", href: "/reading-passages", icon: BookMarked },
         { name: "المصادر", href: "/sources", icon: Database },
@@ -97,6 +99,7 @@ export function Sidebar() {
       name: "الذكاء الاصطناعي",
       icon: BrainCircuit,
       items: [
+        { name: "المساعد الذكي والحدود", href: "/assistant-settings", icon: BrainCircuit },
         { name: "الإعداد السريع", href: "/intelligent-services/setup", icon: Wrench },
         { name: "المزوّدون", href: "/providers", icon: Server },
         { name: "النماذج", href: "/models", icon: Cpu },
