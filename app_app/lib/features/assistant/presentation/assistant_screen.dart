@@ -74,6 +74,8 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
         state.status == AssistantUiStatus.processing ||
         state.status == AssistantUiStatus.uploading ||
         state.status == AssistantUiStatus.streaming;
+    final isBlocked = state.isLimitReached || state.isAssistantDisabled;
+
     return AppScaffold(
       appBar: AppBar(
         title: const Text('المساعد الدراسي'),
@@ -84,17 +86,154 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
       ),
       body: Column(
         children: [
+          _usageHeader(state),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: AppSpacing.md),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm,
+              ),
               child: _body(state, busy),
             ),
           ),
-          _imageTools(busy, state),
-          _composer(busy),
+          if (!isBlocked) _imageTools(busy, state),
+          _composer(busy, isBlocked, state),
         ],
       ),
     );
+  }
+
+  Widget _usageHeader(AssistantState state) {
+    final usage = state.usage;
+    if (usage == null) return const SizedBox.shrink();
+
+    if (state.isAssistantDisabled) {
+      return Container(
+        width: double.infinity,
+        margin: const EdgeInsets.all(AppSpacing.md),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.errorCoral.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: AppColors.errorCoral.withValues(alpha: 0.3)),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: AppColors.errorCoral, size: 20),
+            SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                'المساعد الذكي غير متاح حاليًا.',
+                style: TextStyle(
+                  color: AppColors.errorCoral,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (state.isLimitReached) {
+      return Container(
+        width: double.infinity,
+        margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.warmOrange.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: AppColors.warmOrange.withValues(alpha: 0.4)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.info_outline_rounded, color: AppColors.warmOrange, size: 20),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                usage.limitMessage?.isNotEmpty == true
+                    ? usage.limitMessage!
+                    : 'لقد وصلت إلى الحد المسموح للمساعد الذكي.',
+                style: const TextStyle(
+                  color: AppColors.darkText,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: 8,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.primaryBlue.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.15)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Icon(
+                usage.isUnlimited
+                    ? Icons.all_inclusive_rounded
+                    : Icons.chat_bubble_outline_rounded,
+                color: AppColors.primaryBlue,
+                size: 16,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                usage.isUnlimited
+                    ? 'استخدام غير محدود'
+                    : 'متبقي ${usage.remaining ?? 0} من ${usage.limit} رسائل ${_periodSuffix(usage.resetPeriod)}',
+                style: const TextStyle(
+                  color: AppColors.primaryBlue,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+          if (!usage.isUnlimited && usage.remaining != null)
+            Text(
+              '${((usage.used / (usage.limit > 0 ? usage.limit : 1)) * 100).toInt()}% مستهلك',
+              style: TextStyle(
+                color: AppColors.secondaryText.withValues(alpha: 0.8),
+                fontSize: 11,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  String _periodSuffix(String period) {
+    switch (period.toUpperCase()) {
+      case 'DAILY':
+        return 'اليوم';
+      case 'WEEKLY':
+        return 'هذا الأسبوع';
+      case 'MONTHLY':
+        return 'هذا الشهر';
+      default:
+        return '';
+    }
   }
 
   Widget _body(AssistantState state, bool busy) {
@@ -322,31 +461,42 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
         AppCard(child: Text(response.warnings.join('\n'))),
     ],
   );
-  Widget _composer(bool busy) => SafeArea(
+  Widget _composer(bool busy, bool isBlocked, AssistantState state) => SafeArea(
     top: false,
-    child: Row(
-      children: [
-        Expanded(
-          child: TextField(
-            controller: _messageController,
-            enabled: !busy,
-            minLines: 1,
-            maxLines: 4,
-            textInputAction: TextInputAction.send,
-            onSubmitted: (_) => _send(),
-            decoration: const InputDecoration(
-              hintText: 'اكتب سؤالك الدراسي',
-              border: OutlineInputBorder(),
+    child: Padding(
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _messageController,
+              enabled: !busy && !isBlocked,
+              minLines: 1,
+              maxLines: 4,
+              textInputAction: TextInputAction.send,
+              onSubmitted: (_) => _send(),
+              decoration: InputDecoration(
+                hintText: isBlocked
+                    ? (state.isAssistantDisabled
+                        ? 'المساعد الذكي غير متاح حاليًا'
+                        : 'تم استهلاك رصيد الرسائل المتاح')
+                    : 'اكتب سؤالك الدراسي...',
+                border: const OutlineInputBorder(),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.sm,
+                ),
+              ),
             ),
           ),
-        ),
-        const SizedBox(width: AppSpacing.xs),
-        IconButton.filled(
-          tooltip: 'إرسال',
-          onPressed: busy ? null : _send,
-          icon: const Icon(Icons.send_rounded),
-        ),
-      ],
+          const SizedBox(width: AppSpacing.xs),
+          IconButton.filled(
+            tooltip: 'إرسال',
+            onPressed: (busy || isBlocked) ? null : _send,
+            icon: const Icon(Icons.send_rounded),
+          ),
+        ],
+      ),
     ),
   );
 

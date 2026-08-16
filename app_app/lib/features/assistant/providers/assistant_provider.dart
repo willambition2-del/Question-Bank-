@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,6 +27,8 @@ final class AssistantState {
   final String? errorMessage;
   final AssistantAction? lastAction;
   final Map<String, String> lastArguments;
+  final AssistantUsageInfo? usage;
+  final bool isLoadingUsage;
 
   const AssistantState({
     this.status = AssistantUiStatus.idle,
@@ -35,12 +38,55 @@ final class AssistantState {
     this.errorMessage,
     this.lastAction,
     this.lastArguments = const {},
+    this.usage,
+    this.isLoadingUsage = false,
   });
+
+  bool get isLimitReached =>
+      usage?.isLimitReached == true || status == AssistantUiStatus.limitReached;
+  bool get isAssistantDisabled =>
+      usage?.enabled == false || status == AssistantUiStatus.temporarilyUnavailable;
+
+  AssistantState copyWith({
+    AssistantUiStatus? status,
+    AssistantResponse? response,
+    ImageQuestionAnalysisResponse? imageResponse,
+    double? uploadProgress,
+    String? errorMessage,
+    AssistantAction? lastAction,
+    Map<String, String>? lastArguments,
+    AssistantUsageInfo? usage,
+    bool? isLoadingUsage,
+  }) =>
+      AssistantState(
+        status: status ?? this.status,
+        response: response ?? this.response,
+        imageResponse: imageResponse ?? this.imageResponse,
+        uploadProgress: uploadProgress ?? this.uploadProgress,
+        errorMessage: errorMessage,
+        lastAction: lastAction ?? this.lastAction,
+        lastArguments: lastArguments ?? this.lastArguments,
+        usage: usage ?? this.usage,
+        isLoadingUsage: isLoadingUsage ?? this.isLoadingUsage,
+      );
 }
 
 final class AssistantNotifier extends Notifier<AssistantState> {
   @override
-  AssistantState build() => const AssistantState();
+  AssistantState build() {
+    Future.microtask(loadUsage);
+    return const AssistantState();
+  }
+
+  Future<void> loadUsage() async {
+    state = state.copyWith(isLoadingUsage: true);
+    try {
+      final usage = await ref.read(assistantRepositoryProvider).getUsage();
+      state = state.copyWith(usage: usage, isLoadingUsage: false);
+    } catch (_) {
+      state = state.copyWith(isLoadingUsage: false);
+    }
+  }
 
   Future<void> chat(String message) =>
       _run(AssistantAction.chat, {'message': message});
@@ -55,7 +101,7 @@ final class AssistantNotifier extends Notifier<AssistantState> {
         state.status == AssistantUiStatus.processing) {
       return;
     }
-    state = const AssistantState(status: AssistantUiStatus.uploading);
+    state = state.copyWith(status: AssistantUiStatus.uploading);
     try {
       final response = await ref
           .read(assistantRepositoryProvider)
@@ -66,7 +112,7 @@ final class AssistantNotifier extends Notifier<AssistantState> {
             userQuestion: userQuestion,
             onSendProgress: (sent, total) {
               if (total <= 0) return;
-              state = AssistantState(
+              state = state.copyWith(
                 status: sent < total
                     ? AssistantUiStatus.uploading
                     : AssistantUiStatus.processing,
@@ -74,12 +120,12 @@ final class AssistantNotifier extends Notifier<AssistantState> {
               );
             },
           );
-      state = AssistantState(
+      state = state.copyWith(
         status: AssistantUiStatus.completed,
         imageResponse: response,
       );
     } catch (error) {
-      state = AssistantState(
+      state = state.copyWith(
         status: _errorStatus(error),
         errorMessage: _errorMessage(error),
       );
@@ -117,7 +163,7 @@ final class AssistantNotifier extends Notifier<AssistantState> {
       for (final entry in arguments.entries) entry.key: entry.value.trim(),
     };
     if (trimmed.values.any((value) => value.isEmpty)) return;
-    state = AssistantState(
+    state = state.copyWith(
       status: AssistantUiStatus.processing,
       lastAction: action,
       lastArguments: trimmed,
@@ -147,20 +193,48 @@ final class AssistantNotifier extends Notifier<AssistantState> {
         AssistantAction.askKnowledge => throw const ValidationFailure(),
         AssistantAction.analyzeImage => throw const ValidationFailure(),
       };
-      state = AssistantState(
+
+      // Optimistically update usage info
+      AssistantUsageInfo? updatedUsage = state.usage;
+      if (updatedUsage != null && response.used != null) {
+        updatedUsage = updatedUsage.copyWith(
+          used: response.used,
+          remaining: response.remaining,
+          limit: response.limit,
+          resetPeriod: response.resetPeriod,
+          resetAt: response.resetAt,
+        );
+      } else if (updatedUsage != null && !updatedUsage.isUnlimited) {
+        final newUsed = updatedUsage.used + 1;
+        final newRemaining = math.max(0, updatedUsage.limit - newUsed);
+        updatedUsage = updatedUsage.copyWith(
+          used: newUsed,
+          remaining: newRemaining,
+        );
+      }
+
+      state = state.copyWith(
         status: response.hasSufficientContext
             ? AssistantUiStatus.completed
             : AssistantUiStatus.insufficientContext,
         response: response,
         lastAction: action,
         lastArguments: trimmed,
+        usage: updatedUsage,
       );
     } catch (error) {
-      state = AssistantState(
+      AssistantUsageInfo? updatedUsage = state.usage;
+      if (_errorStatus(error) == AssistantUiStatus.limitReached &&
+          updatedUsage != null) {
+        updatedUsage = updatedUsage.copyWith(remaining: 0);
+      }
+
+      state = state.copyWith(
         status: _errorStatus(error),
         errorMessage: _errorMessage(error),
         lastAction: action,
         lastArguments: trimmed,
+        usage: updatedUsage,
       );
     }
   }
@@ -174,19 +248,30 @@ final class AssistantNotifier extends Notifier<AssistantState> {
         (error.statusCode == 502 || error.statusCode == 503)) {
       return AssistantUiStatus.temporarilyUnavailable;
     }
+    if (error is ApiException && error.backendCode == 'AI_ASSISTANT_DISABLED') {
+      return AssistantUiStatus.temporarilyUnavailable;
+    }
     return AssistantUiStatus.retry;
   }
 
-  String _errorMessage(Object error) => switch (_errorStatus(error)) {
-    AssistantUiStatus.limitReached =>
-      'وصلت إلى الحد المتاح حاليًا. جرّب مرة أخرى لاحقًا.',
-    AssistantUiStatus.temporarilyUnavailable =>
-      'المساعد غير متاح مؤقتًا. حاول بعد قليل.',
-    _ =>
-      error is ApiException
-          ? error.userMessage
-          : 'تعذر إكمال الطلب. تحقق من الاتصال ثم أعد المحاولة.',
-  };
+  String _errorMessage(Object error) {
+    if (error is ApiException && error.backendCode == 'AI_MESSAGE_LIMIT_REACHED') {
+      return error.userMessage;
+    }
+    if (error is ApiException && error.backendCode == 'AI_ASSISTANT_DISABLED') {
+      return 'المساعد الذكي غير متاح حاليًا.';
+    }
+    return switch (_errorStatus(error)) {
+      AssistantUiStatus.limitReached =>
+        'لقد وصلت إلى الحد المسموح للمساعد الذكي.',
+      AssistantUiStatus.temporarilyUnavailable =>
+        'المساعد غير متاح حاليًا.',
+      _ =>
+        error is ApiException
+            ? error.userMessage
+            : 'تعذر إكمال الطلب. تحقق من الاتصال ثم أعد المحاولة.',
+    };
+  }
 }
 
 final assistantProvider = NotifierProvider<AssistantNotifier, AssistantState>(

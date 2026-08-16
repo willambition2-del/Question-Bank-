@@ -75,6 +75,15 @@ class MistakesNotifier extends Notifier<MistakesState> {
     }
   }
 
+  void removeMistake(String questionId) {
+    if (state.mistakes.hasValue) {
+      final currentList = state.mistakes.value!;
+      final updatedList =
+          currentList.where((m) => m.question.id != questionId).toList();
+      state = state.copyWith(mistakes: AsyncValue.data(updatedList));
+    }
+  }
+
   List<MistakeRecord> getFilteredMistakes() => state.mistakes.value ?? const [];
 }
 

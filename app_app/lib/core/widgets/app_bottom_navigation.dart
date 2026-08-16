@@ -56,9 +56,9 @@ class AppBottomNavigation extends StatelessWidget {
               label: 'المواد',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.emoji_events_outlined),
-              activeIcon: Icon(Icons.emoji_events_rounded),
-              label: 'المنافسات',
+              icon: Icon(Icons.auto_awesome_outlined),
+              activeIcon: Icon(Icons.auto_awesome),
+              label: 'المساعد',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.bar_chart_outlined),

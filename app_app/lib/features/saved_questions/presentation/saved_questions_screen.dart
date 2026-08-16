@@ -99,7 +99,6 @@ class SavedQuestionsScreen extends ConsumerWidget {
                       count: records.length,
                       difficulty: 'MIXED',
                       type: 'mixed',
-                      useHearts: false,
                       useTimer: false,
                       timerLimitSeconds: 30,
                     );

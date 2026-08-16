@@ -39,7 +39,6 @@ class _QuizSetupScreenState extends ConsumerState<QuizSetupScreen> {
   final int _timerSeconds = 30;
 
   String _explanationMode = "afterEach"; // 'afterEach', 'atEnd', 'none'
-  bool _useHearts = true;
   bool _excludeMastered = false;
   bool _unsolvedOnly = false;
 
@@ -123,7 +122,7 @@ class _QuizSetupScreenState extends ConsumerState<QuizSetupScreen> {
                     ),
                   ),
                   Text(
-                    "• التفسيرات: ${_getExplanationLabel()}  |  القلوب: ${_useHearts ? 'نشطة (3)' : 'معطلة'}",
+                    "• التفسيرات: ${_getExplanationLabel()}",
                     style: AppTypography.body.copyWith(
                       fontWeight: FontWeight.w600,
                       color: AppColors.darkText,
@@ -255,7 +254,7 @@ class _QuizSetupScreenState extends ConsumerState<QuizSetupScreen> {
             ),
             const SizedBox(height: AppSpacing.lg),
 
-            // --- 5. EXPLANATIONS & HEARTS OPTIONS ---
+            // --- 5. EXPLANATIONS OPTIONS ---
             Text(
               "التفسيرات وإعدادات المحاولة",
               style: AppTypography.sectionTitle,
@@ -286,15 +285,6 @@ class _QuizSetupScreenState extends ConsumerState<QuizSetupScreen> {
                         if (val != null) setState(() => _explanationMode = val);
                       },
                     ),
-                  ),
-                  const Divider(),
-                  SwitchListTile(
-                    title: const Text("نظام القلوب (3 أخطاء تنهي الاختبار)"),
-                    value: _useHearts,
-                    thumbColor: const WidgetStatePropertyAll(
-                      AppColors.primaryBlue,
-                    ),
-                    onChanged: (val) => setState(() => _useHearts = val),
                   ),
                   const Divider(),
                   SwitchListTile(
@@ -337,7 +327,6 @@ class _QuizSetupScreenState extends ConsumerState<QuizSetupScreen> {
                       count: _questionCount,
                       difficulty: _difficulty,
                       type: _questionType,
-                      useHearts: _useHearts,
                       useTimer: useTimer,
                       timerLimitSeconds: _timerSeconds,
                       timingMode: _timerMode,

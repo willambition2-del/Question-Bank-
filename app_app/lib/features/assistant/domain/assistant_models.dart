@@ -28,6 +28,58 @@ final class AssistantSourceReference {
       );
 }
 
+final class AssistantUsageInfo {
+  final bool enabled;
+  final int limit;
+  final int used;
+  final int? remaining;
+  final String resetPeriod;
+  final String? resetAt;
+  final String? limitMessage;
+
+  const AssistantUsageInfo({
+    required this.enabled,
+    required this.limit,
+    required this.used,
+    required this.remaining,
+    required this.resetPeriod,
+    this.resetAt,
+    this.limitMessage,
+  });
+
+  bool get isUnlimited => limit == 0;
+  bool get isLimitReached => !isUnlimited && (remaining != null && remaining! <= 0);
+
+  factory AssistantUsageInfo.fromJson(Map<String, dynamic> json) => AssistantUsageInfo(
+    enabled: json['enabled'] as bool? ?? false,
+    limit: (json['limit'] as num?)?.toInt() ?? 0,
+    used: (json['used'] as num?)?.toInt() ?? 0,
+    remaining: (json['remaining'] as num?)?.toInt(),
+    resetPeriod: json['resetPeriod']?.toString() ?? 'DAILY',
+    resetAt: json['resetAt']?.toString(),
+    limitMessage: json['limitMessage']?.toString(),
+  );
+
+  AssistantUsageInfo copyWith({
+    bool? enabled,
+    int? limit,
+    int? used,
+    int? remaining,
+    String? resetPeriod,
+    String? resetAt,
+    String? limitMessage,
+  }) =>
+      AssistantUsageInfo(
+        enabled: enabled ?? this.enabled,
+        limit: limit ?? this.limit,
+        used: used ?? this.used,
+        remaining: remaining ?? this.remaining,
+        resetPeriod: resetPeriod ?? this.resetPeriod,
+        resetAt: resetAt ?? this.resetAt,
+        limitMessage: limitMessage ?? this.limitMessage,
+      );
+}
+
 final class AssistantResponse {
   final String requestId;
   final bool hasSufficientContext;
@@ -37,6 +89,11 @@ final class AssistantResponse {
   final String? commonMistake;
   final List<AssistantSourceReference> sources;
   final int? remainingToday;
+  final int? remaining;
+  final int? used;
+  final int? limit;
+  final String? resetPeriod;
+  final String? resetAt;
 
   const AssistantResponse({
     required this.requestId,
@@ -47,6 +104,11 @@ final class AssistantResponse {
     required this.commonMistake,
     required this.sources,
     required this.remainingToday,
+    this.remaining,
+    this.used,
+    this.limit,
+    this.resetPeriod,
+    this.resetAt,
   });
 
   factory AssistantResponse.fromJson(Map<String, dynamic> json) {
@@ -75,6 +137,11 @@ final class AssistantResponse {
           )
           .toList(growable: false),
       remainingToday: (usage['remainingToday'] as num?)?.toInt(),
+      remaining: (usage['remaining'] as num?)?.toInt(),
+      used: (usage['used'] as num?)?.toInt(),
+      limit: (usage['limit'] as num?)?.toInt(),
+      resetPeriod: usage['resetPeriod']?.toString(),
+      resetAt: usage['resetAt']?.toString(),
     );
   }
 

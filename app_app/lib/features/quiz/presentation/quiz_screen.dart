@@ -107,24 +107,6 @@ class QuizScreen extends ConsumerWidget {
             ),
           ),
           actions: [
-            // Hearts Indicator
-            if (quizState.hearts >= 0)
-              Padding(
-                padding: const EdgeInsets.only(left: 8),
-                child: Row(
-                  children: List.generate(
-                    quizState.maxHearts,
-                    (index) => Icon(
-                      index < quizState.hearts
-                          ? Icons.favorite_rounded
-                          : Icons.favorite_border_rounded,
-                      color: AppColors.errorCoral,
-                      size: 20,
-                    ),
-                  ),
-                ),
-              ),
-
             // Timer Badge
             if (quizState.timerSeconds >= 0)
               Container(

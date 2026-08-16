@@ -187,7 +187,6 @@ class UnitDetailsScreen extends ConsumerWidget {
           count: lesson.questionsCount,
           difficulty: "mixed",
           type: "mixed",
-          useHearts: true,
           useTimer: false,
           timerLimitSeconds: 30,
           timingMode: "none",

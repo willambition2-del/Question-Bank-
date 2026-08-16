@@ -108,8 +108,6 @@ class MistakesScreen extends ConsumerWidget {
                   itemBuilder: (context, index) => _MistakeCard(
                     record: items[index],
                     index: index + 1,
-                    onReviewed: () =>
-                        notifier.resolveMistake(items[index].question.id),
                   ),
                 );
               },
@@ -132,7 +130,6 @@ class MistakesScreen extends ConsumerWidget {
                             count: records.length,
                             difficulty: 'MIXED',
                             type: 'mixed',
-                            useHearts: true,
                             useTimer: false,
                             timerLimitSeconds: 30,
                           );
@@ -162,12 +159,10 @@ class MistakesScreen extends ConsumerWidget {
 class _MistakeCard extends StatelessWidget {
   final MistakeRecord record;
   final int index;
-  final Future<void> Function() onReviewed;
 
   const _MistakeCard({
     required this.record,
     required this.index,
-    required this.onReviewed,
   });
 
   @override
@@ -216,19 +211,6 @@ class _MistakeCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('الإتقان الحالي: $mastery%', style: AppTypography.caption),
-              OutlineButton(
-                height: 34,
-                text: record.reviewed ? 'تمت مراجعة السؤال' : 'تأكيد المراجعة',
-                onPressed: record.reviewed
-                    ? null
-                    : () async {
-                        await onReviewed();
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('تمت مراجعة السؤال')),
-                        );
-                      },
-              ),
             ],
           ),
         ],

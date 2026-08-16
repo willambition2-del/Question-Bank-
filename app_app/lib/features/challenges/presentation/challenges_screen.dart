@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:ui';
 import '../../../app/theme/design_tokens.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/network/challenge_api_models.dart';
 import '../providers/challenge_provider.dart';
 
@@ -16,9 +18,21 @@ class ChallengesScreen extends ConsumerWidget {
     final history = ref.watch(challengeHistoryProvider);
     ref.watch(challengeModesProvider);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+    return AppScaffold(
+      appBar: AppBar(
+        title: const Text("ساحة المنافسات"),
+      ),
+      body: Stack(
+        children: [
+          Opacity(
+            opacity: 0.6,
+            child: ImageFiltered(
+              imageFilter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
         const SizedBox(height: AppSpacing.sm),
         Text("ساحة المنافسات والتحديات", style: AppTypography.pageTitle),
         const SizedBox(height: AppSpacing.xs),
@@ -314,8 +328,47 @@ class ChallengesScreen extends ConsumerWidget {
               ],
             ),
           ),
-        ),
-      ],
+        ), // end Expanded
+                  ],
+                ), // end Column
+              ), // end Padding
+            ), // end ImageFiltered
+          ), // end Opacity
+          Center(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+              margin: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: const [AppShadows.card],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.construction_rounded, size: 48, color: AppColors.primaryBlue),
+                  const SizedBox(height: 16),
+                  Text(
+                    "قريباً!",
+                    style: AppTypography.pageTitle.copyWith(color: AppColors.primaryBlue),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "نعمل على تطوير ساحة المنافسات\nلتقديم تجربة لعب رائعة قريباً.",
+                    textAlign: TextAlign.center,
+                    style: AppTypography.body.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 24),
+                  PrimaryButton(
+                    text: "العودة للإعدادات",
+                    onPressed: () => context.pop(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

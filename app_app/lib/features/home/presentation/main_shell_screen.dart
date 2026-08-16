@@ -5,7 +5,7 @@ import '../../../core/widgets/app_scaffold.dart';
 import '../../../core/widgets/app_bottom_navigation.dart';
 import 'home_screen.dart';
 import '../../subjects/presentation/subjects_screen.dart';
-import '../../challenges/presentation/challenges_screen.dart';
+import '../../assistant/presentation/assistant_screen.dart';
 import '../../statistics/presentation/statistics_screen.dart';
 import '../../profile/presentation/profile_screen.dart';
 
@@ -23,7 +23,7 @@ class MainShellScreen extends ConsumerWidget {
         children: const [
           HomeScreen(),
           SubjectsScreen(),
-          ChallengesScreen(),
+          AssistantScreen(),
           StatisticsScreen(),
           ProfileScreen(),
         ],

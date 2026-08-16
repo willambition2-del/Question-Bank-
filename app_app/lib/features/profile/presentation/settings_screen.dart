@@ -25,9 +25,32 @@ class SettingsScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: AppSpacing.sm),
-
-
+            // --- SECTION 1: CHALLENGES ---
+            Text(
+              "المنافسات واللعب الجماعي",
+              style: AppTypography.sectionTitle,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            AppCard(
+              padding: EdgeInsets.zero,
+              child: ListTile(
+                leading: const Icon(
+                  Icons.emoji_events_rounded,
+                  color: AppColors.goldAccent,
+                ),
+                title: Text(
+                  "ساحة المنافسة",
+                  style: AppTypography.cardTitle.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+                subtitle: const Text("العب وتنافس مع زملائك."),
+                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                onTap: () => context.push('/challenges'),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
 
             // --- SECTION 2: QUIZ & TIMER SETTINGS ---
             Text(

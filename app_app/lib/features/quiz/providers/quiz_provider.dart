@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/errors/api_exception.dart';
 import '../../../core/models/reading_passage.dart';
 import '../../../core/network/quiz_api_models.dart';
+import '../../mistakes/providers/mistakes_provider.dart';
+import '../../notifications/providers/notifications_provider.dart';
 import '../../../core/repositories/providers.dart';
 import '../../../core/repositories/quiz_api_repository.dart';
 
@@ -37,8 +39,6 @@ class QuizState {
   final String? explanationShort;
   final String? explanationDetailed;
   final String? selectedOptionWhyWrong;
-  final int hearts;
-  final int maxHearts;
   final int timerSeconds;
   final int maxTimerSeconds;
   final int totalElapsedTimeSeconds;
@@ -66,8 +66,6 @@ class QuizState {
     this.explanationShort,
     this.explanationDetailed,
     this.selectedOptionWhyWrong,
-    this.hearts = -1,
-    this.maxHearts = 3,
     this.timerSeconds = -1,
     this.maxTimerSeconds = -1,
     this.totalElapsedTimeSeconds = 0,
@@ -105,8 +103,6 @@ class QuizState {
     Object? explanationShort = _unset,
     Object? explanationDetailed = _unset,
     Object? selectedOptionWhyWrong = _unset,
-    int? hearts,
-    int? maxHearts,
     int? timerSeconds,
     int? maxTimerSeconds,
     int? totalElapsedTimeSeconds,
@@ -149,8 +145,6 @@ class QuizState {
     selectedOptionWhyWrong: identical(selectedOptionWhyWrong, _unset)
         ? this.selectedOptionWhyWrong
         : selectedOptionWhyWrong as String?,
-    hearts: hearts ?? this.hearts,
-    maxHearts: maxHearts ?? this.maxHearts,
     timerSeconds: timerSeconds ?? this.timerSeconds,
     maxTimerSeconds: maxTimerSeconds ?? this.maxTimerSeconds,
     totalElapsedTimeSeconds:
@@ -195,7 +189,6 @@ class QuizNotifier extends Notifier<QuizState> {
     required int count,
     required String difficulty,
     required String type,
-    required bool useHearts,
     required bool useTimer,
     required int timerLimitSeconds,
     String timingMode = 'perQuestion',
@@ -248,8 +241,8 @@ class QuizNotifier extends Notifier<QuizState> {
         timePerQuestionSeconds: backendTiming == 'PER_QUESTION'
             ? timerLimitSeconds
             : null,
-        heartsEnabled: useHearts,
-        initialHearts: 3,
+        heartsEnabled: false,
+        initialHearts: 0,
         hintsEnabled: true,
         eliminationEnabled: false,
         explanationMode: backendExplanation,
@@ -295,8 +288,6 @@ class QuizNotifier extends Notifier<QuizState> {
       attempt: response.attempt,
       availability: response.availability,
       status: QuizQuestionStatus.idle,
-      hearts: response.attempt.heartsRemaining ?? -1,
-      maxHearts: 3,
       timerSeconds: timerSeconds,
       maxTimerSeconds: timerSeconds,
       correctCount: response.attempt.correctCount,
@@ -420,6 +411,11 @@ class QuizNotifier extends Notifier<QuizState> {
           : response.isCorrect == false
           ? QuizQuestionStatus.submittedWrong
           : QuizQuestionStatus.submittedHidden;
+          
+      if (response.isCorrect == true) {
+        ref.read(mistakesNotifierProvider.notifier).removeMistake(question.id);
+      }
+      
       state = state.copyWith(
         status: status,
         revealedCorrectOptionId: response.correctOptionId,
@@ -427,7 +423,6 @@ class QuizNotifier extends Notifier<QuizState> {
         explanationShort: response.explanationShort,
         explanationDetailed: response.explanationDetailed,
         selectedOptionWhyWrong: response.selectedOptionWhyWrong,
-        hearts: response.heartsRemaining ?? -1,
         correctCount: response.correct,
         wrongCount: response.wrong,
         unansweredCount: response.remaining,

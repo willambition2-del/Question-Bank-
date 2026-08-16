@@ -16,14 +16,16 @@ import '../../features/quiz/presentation/quiz_screen.dart';
 import '../../features/results/presentation/quiz_result_screen.dart';
 import '../../features/challenges/presentation/challenge_waiting_screen.dart';
 import '../../features/challenges/presentation/challenge_live_screen.dart';
+import '../../features/challenges/presentation/challenges_screen.dart';
 import '../../features/leaderboard/presentation/leaderboard_screen.dart';
 import '../../features/profile/presentation/achievements_screen.dart';
 import '../../features/saved_questions/presentation/saved_questions_screen.dart';
 import '../../features/profile/presentation/settings_screen.dart';
-import '../../features/profile/presentation/character_customization_screen.dart';
 import '../../features/mistakes/presentation/mistakes_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
 import '../../features/assistant/presentation/assistant_screen.dart';
+import '../../features/curriculum/presentation/curriculum_subjects_screen.dart';
+import '../../features/curriculum/presentation/curriculum_resources_screen.dart';
 
 import 'tab_index_provider.dart';
 
@@ -71,13 +73,7 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/challenges',
-      redirect: (context, state) {
-        ProviderScope.containerOf(
-          context,
-          listen: false,
-        ).read(tabIndexProvider.notifier).setIndex(2);
-        return '/home';
-      },
+      builder: (context, state) => const ChallengesScreen(),
     ),
     GoRoute(
       path: '/statistics',
@@ -97,6 +93,22 @@ final appRouter = GoRouter(
           listen: false,
         ).read(tabIndexProvider.notifier).setIndex(4);
         return '/home';
+      },
+    ),
+
+    // Curriculum Routes
+    GoRoute(
+      path: '/curriculum-resources',
+      builder: (context, state) => const CurriculumSubjectsScreen(),
+    ),
+    GoRoute(
+      path: '/curriculum-resources/:subjectId',
+      builder: (context, state) {
+        final subjectId = state.pathParameters['subjectId'] ?? '';
+        return CurriculumResourcesScreen(
+          subjectId: subjectId,
+          subject: state.extra as dynamic,
+        );
       },
     ),
 
@@ -239,11 +251,6 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/mistakes',
       builder: (context, state) => const MistakesScreen(),
-    ),
-    // Character Customization Screen
-    GoRoute(
-      path: '/character-customization',
-      builder: (context, state) => const CharacterCustomizationScreen(),
     ),
   ],
 

@@ -19,6 +19,7 @@ abstract interface class AssistantRemoteDataSource {
     String path, [
     Map<String, dynamic> body = const {},
   ]);
+  Future<Map<String, dynamic>> get(String path);
 }
 
 final class DioAssistantRemoteDataSource implements AssistantRemoteDataSource {
@@ -63,6 +64,16 @@ final class DioAssistantRemoteDataSource implements AssistantRemoteDataSource {
       throwApiError(error);
     }
   }
+
+  @override
+  Future<Map<String, dynamic>> get(String path) async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(path);
+      return requireObject(requireObject(response.data)['data']);
+    } on DioException catch (error) {
+      throwApiError(error);
+    }
+  }
 }
 
 final class AssistantApiRepository implements AssistantRepository {
@@ -86,6 +97,12 @@ final class AssistantApiRepository implements AssistantRepository {
       onSendProgress: onSendProgress,
     ),
   );
+  @override
+  Future<AssistantUsageInfo> getUsage() async {
+    final data = await _remote.get('/assistant/usage');
+    return AssistantUsageInfo.fromJson(data);
+  }
+
   @override
   Future<AssistantResponse> chat(String message) =>
       _send('/assistant/chat', {'message': message.trim()});
@@ -131,9 +148,9 @@ final class AssistantApiRepository implements AssistantRepository {
   }) => _send('/assistant/knowledge/ask', {
     'question': question.trim(),
     'knowledgeBaseId': knowledgeBaseId,
-    if (subjectId != null) 'subjectId': subjectId,
-    if (unitId != null) 'unitId': unitId,
-    if (lessonId != null) 'lessonId': lessonId,
+    ...?subjectId == null ? null : {'subjectId': subjectId},
+    ...?unitId == null ? null : {'unitId': unitId},
+    ...?lessonId == null ? null : {'lessonId': lessonId},
   });
 
   Future<AssistantResponse> _send(

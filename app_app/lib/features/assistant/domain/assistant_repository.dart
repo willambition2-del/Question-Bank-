@@ -10,6 +10,7 @@ abstract interface class AssistantRepository {
     String? userQuestion,
     void Function(int sent, int total)? onSendProgress,
   });
+  Future<AssistantUsageInfo> getUsage();
   Future<AssistantResponse> chat(String message);
 
   Future<AssistantResponse> questionHint({

@@ -343,10 +343,11 @@ class HomeScreen extends ConsumerWidget {
               _buildSectionItem(
                 context: context,
                 icon: Icons.import_contacts_rounded,
-                label: "المواد الدراسية",
+                label: "المواد والاختبارات",
                 color: AppColors.primaryBlue,
                 onTap: () => ref.read(tabIndexProvider.notifier).setIndex(1),
               ),
+
               _buildSectionItem(
                 context: context,
                 icon: Icons.assignment_rounded,
@@ -384,10 +385,10 @@ class HomeScreen extends ConsumerWidget {
               ),
               _buildSectionItem(
                 context: context,
-                icon: Icons.analytics_rounded,
-                label: "الإحصائيات",
-                color: AppColors.successGreen,
-                onTap: () => ref.read(tabIndexProvider.notifier).setIndex(3),
+                icon: Icons.menu_book_rounded,
+                label: "المنهج الدراسي",
+                color: AppColors.secondaryTeal,
+                onTap: () => context.push('/curriculum-resources'),
               ),
               _buildSectionItem(
                 context: context,
