@@ -29,6 +29,19 @@ abstract interface class AuthRepository {
     required String password,
   });
   Future<StudentModel?> getLoggedInStudent();
+  Future<StudentModel> completeOnboarding({
+    required String schoolName,
+    required String governorate,
+    required String gradeLevel,
+    String? phone,
+  });
+  Future<StudentModel> updateProfile({
+    String? name,
+    String? schoolName,
+    String? governorate,
+    String? gradeLevel,
+    String? phone,
+  });
 
   Future<void> updateStudentPointsAndStats(
     int points,

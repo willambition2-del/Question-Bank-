@@ -3,10 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/theme/design_tokens.dart';
 import '../../../app/router/tab_index_provider.dart';
-import '../../../app/router/tab_index_provider.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_header.dart';
-import '../../../core/widgets/stat_card.dart';
 import '../../../core/widgets/stat_card.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/home_dashboard_provider.dart';
@@ -49,6 +47,56 @@ class HomeScreen extends ConsumerWidget {
             onNotificationTap: () => context.push('/notifications'),
           ),
           const SizedBox(height: AppSpacing.sm),
+
+          // 9th Grade Welcome Banner
+          if (student?.gradeLevel == 'NINTH') ...[
+            AppCard(
+              backgroundColor: AppColors.lightBlue,
+              border: Border.all(
+                color: AppColors.primaryBlue.withValues(alpha: 0.3),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryBlue.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.auto_stories_rounded,
+                      color: AppColors.primaryBlue,
+                      size: 26,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'محتوى الصف التاسع قيد الإضافة 📚',
+                          style: AppTypography.cardTitle.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.darkText,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'سيتم توفير المواد الدراسية وبنك الأسئلة والنماذج قريبًا.',
+                          style: AppTypography.caption.copyWith(
+                            color: AppColors.secondaryText,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+          ],
 
           // 2. Day Plan (خطة اليوم)
           AppCard(

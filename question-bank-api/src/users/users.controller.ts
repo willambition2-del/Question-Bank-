@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOkResponse,
@@ -9,6 +9,7 @@ import {
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../common/interfaces/authenticated-user.interface';
 import { PublicUser } from '../common/types/public-user.type';
+import { CompleteOnboardingDto } from './dto/complete-onboarding.dto';
 import { PublicUserDto } from './dto/public-user.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UsersService } from './users.service';
@@ -32,6 +33,19 @@ export class UsersController {
     return this.usersService.getPublicProfile(currentUser.userId);
   }
 
+  @Post('complete-onboarding')
+  @ApiOperation({ summary: 'Complete first-time student onboarding' })
+  @ApiOkResponse({
+    description: 'The completed user profile.',
+    type: PublicUserDto,
+  })
+  completeOnboarding(
+    @CurrentUser() currentUser: AuthenticatedUser,
+    @Body() dto: CompleteOnboardingDto,
+  ): Promise<PublicUser> {
+    return this.usersService.completeOnboarding(currentUser.userId, dto);
+  }
+
   @Patch('me')
   @ApiOperation({ summary: 'Update the current user profile' })
   @ApiOkResponse({
@@ -45,3 +59,4 @@ export class UsersController {
     return this.usersService.updateProfile(currentUser.userId, dto);
   }
 }
+

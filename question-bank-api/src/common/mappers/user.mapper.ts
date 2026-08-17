@@ -1,4 +1,4 @@
-import { CompanionType, UserRole } from '../../generated/prisma/enums';
+import { CompanionType, GradeLevel, UserRole } from '../../generated/prisma/enums';
 import { PublicUser } from '../types/public-user.type';
 
 export interface PublicUserSource {
@@ -10,6 +10,9 @@ export interface PublicUserSource {
   role: UserRole;
   companion: CompanionType;
   schoolName: string | null;
+  governorate?: string | null;
+  gradeLevel?: GradeLevel | null;
+  onboardingCompleted?: boolean | null;
   isActive: boolean;
   lastLoginAt: Date | null;
   createdAt: Date;
@@ -25,8 +28,12 @@ export function toPublicUser(user: PublicUserSource): PublicUser {
     role: user.role,
     companion: user.companion,
     schoolName: user.schoolName,
+    governorate: user.governorate ?? null,
+    gradeLevel: user.gradeLevel ?? null,
+    onboardingCompleted: Boolean(user.onboardingCompleted),
     isActive: user.isActive,
     lastLoginAt: user.lastLoginAt,
     createdAt: user.createdAt,
   };
 }
+

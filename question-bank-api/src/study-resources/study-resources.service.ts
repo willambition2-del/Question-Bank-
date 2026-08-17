@@ -5,6 +5,7 @@ import { CreateStudyResourceDto } from './dto/create-study-resource.dto';
 import { UpdateStudyResourceDto } from './dto/update-study-resource.dto';
 import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { GradeLevel } from '../generated/prisma/enums';
 
 @Injectable()
 export class StudyResourcesService {
@@ -34,11 +35,22 @@ export class StudyResourcesService {
 
   // --- Client Methods ---
 
-  async getSubjectsWithResources() {
+  private async getStudentGradeLevel(userId?: string): Promise<GradeLevel> {
+    if (!userId) return GradeLevel.THIRD_SECONDARY;
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { gradeLevel: true },
+    });
+    return user?.gradeLevel ?? GradeLevel.THIRD_SECONDARY;
+  }
+
+  async getSubjectsWithResources(userId?: string) {
+    const userGrade = await this.getStudentGradeLevel(userId);
     return this.prisma.subject.findMany({
       where: {
         isActive: true,
         isPublished: true,
+        grade: { isActive: true, deletedAt: null, code: userGrade },
         studyResources: {
           some: { isPublished: true },
         },
@@ -53,7 +65,22 @@ export class StudyResourcesService {
     });
   }
 
-  async getResourcesBySubject(subjectId: string) {
+  async getResourcesBySubject(subjectId: string, userId?: string) {
+    const userGrade = await this.getStudentGradeLevel(userId);
+    const subject = await this.prisma.subject.findFirst({
+      where: {
+        id: subjectId,
+        isActive: true,
+        isPublished: true,
+        deletedAt: null,
+        grade: { isActive: true, deletedAt: null, code: userGrade },
+      },
+      select: { id: true },
+    });
+    if (!subject) {
+      return [];
+    }
+
     return this.prisma.studyResource.findMany({
       where: {
         subjectId,

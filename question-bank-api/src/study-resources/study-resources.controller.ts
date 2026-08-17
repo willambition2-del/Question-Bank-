@@ -17,18 +17,24 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../generated/prisma/enums';
 
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '../common/interfaces/authenticated-user.interface';
+
 @Controller('study-resources')
 export class StudyResourcesController {
   constructor(private readonly studyResourcesService: StudyResourcesService) {}
 
   @Get('subjects')
-  getSubjectsWithResources() {
-    return this.studyResourcesService.getSubjectsWithResources();
+  getSubjectsWithResources(@CurrentUser() currentUser?: AuthenticatedUser) {
+    return this.studyResourcesService.getSubjectsWithResources(currentUser?.userId);
   }
 
   @Get('subjects/:subjectId/resources')
-  getResourcesBySubject(@Param('subjectId') subjectId: string) {
-    return this.studyResourcesService.getResourcesBySubject(subjectId);
+  getResourcesBySubject(
+    @Param('subjectId') subjectId: string,
+    @CurrentUser() currentUser?: AuthenticatedUser,
+  ) {
+    return this.studyResourcesService.getResourcesBySubject(subjectId, currentUser?.userId);
   }
 
   @Get(':id/download')

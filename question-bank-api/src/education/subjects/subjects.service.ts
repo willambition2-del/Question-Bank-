@@ -14,17 +14,28 @@ import {
 } from '../education-errors';
 import { toAdminSubject, toStudentSubject } from '../education.mapper';
 
+import { GradeLevel } from '../../generated/prisma/enums';
+
 @Injectable()
 export class SubjectsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private async getStudentGradeLevel(userId: string): Promise<GradeLevel> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { gradeLevel: true, role: true },
+    });
+    return user?.gradeLevel ?? GradeLevel.THIRD_SECONDARY;
+  }
+
   async listPublished(userId: string, query: SubjectQueryDto) {
+    const userGrade = await this.getStudentGradeLevel(userId);
     const where = {
       isActive: true,
       isPublished: true,
       deletedAt: null,
       curriculum: { isActive: true, deletedAt: null },
-      grade: { isActive: true, deletedAt: null },
+      grade: { isActive: true, deletedAt: null, code: userGrade },
       ...(query.favorite === true ? { favoritedBy: { some: { userId } } } : {}),
       ...(query.search
         ? {
@@ -70,6 +81,7 @@ export class SubjectsService {
   }
 
   async getPublished(userId: string, id: string) {
+    const userGrade = await this.getStudentGradeLevel(userId);
     const subject = await this.prisma.subject.findFirst({
       where: {
         id,
@@ -77,7 +89,7 @@ export class SubjectsService {
         isPublished: true,
         deletedAt: null,
         curriculum: { isActive: true, deletedAt: null },
-        grade: { isActive: true, deletedAt: null },
+        grade: { isActive: true, deletedAt: null, code: userGrade },
       },
       include: {
         _count: {

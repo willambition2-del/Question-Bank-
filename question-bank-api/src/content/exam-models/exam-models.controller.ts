@@ -22,6 +22,9 @@ import {
 } from '../dto/phase-c.dto';
 import { ExamModelsService } from './exam-models.service';
 
+import { CurrentUser } from '../../auth/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '../../common/interfaces/authenticated-user.interface';
+
 @ApiTags('Exam Models')
 @ApiBearerAuth('access-token')
 @Controller('exam-models')
@@ -30,8 +33,11 @@ export class ExamModelsController {
 
   @Get()
   @ApiOperation({ summary: 'List published exam models' })
-  async list(@Query() query: ExamModelQueryDto) {
-    const result = await this.exams.listStudent(query);
+  async list(
+    @Query() query: ExamModelQueryDto,
+    @CurrentUser() user?: AuthenticatedUser,
+  ) {
+    const result = await this.exams.listStudent(query, user?.userId);
     return { data: result.items, meta: result.meta };
   }
 

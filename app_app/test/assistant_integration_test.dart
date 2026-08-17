@@ -164,6 +164,16 @@ final class _RecordingRemote implements AssistantRemoteDataSource {
       'usage': {'remainingToday': 5},
     };
   }
+
+  @override
+  Future<Map<String, dynamic>> get(String path) async {
+    calls.add((path, const {}));
+    return {
+      'status': 'OK',
+      'remainingToday': 5,
+      'dailyLimit': 10,
+    };
+  }
 }
 
 final class _FakeRepository implements AssistantRepository {
@@ -175,6 +185,18 @@ final class _FakeRepository implements AssistantRepository {
   Future<AssistantResponse> _result() async {
     if (error != null) throw error!;
     return response ?? _response();
+  }
+
+  @override
+  Future<AssistantUsageInfo> getUsage() async {
+    return const AssistantUsageInfo(
+      enabled: true,
+      limit: 10,
+      used: 5,
+      remaining: 5,
+      resetPeriod: 'DAILY',
+      resetAt: '2026-08-18T00:00:00Z',
+    );
   }
 
   @override

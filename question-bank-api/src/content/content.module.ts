@@ -25,6 +25,8 @@ import {
 } from './sources/sources.controller';
 import { SourcesService } from './sources/sources.service';
 
+import { ExcelImportService } from './question-imports/excel-import.service';
+
 @Module({
   controllers: [
     SourcesController,
@@ -49,6 +51,7 @@ import { SourcesService } from './sources/sources.service';
     QuestionImportsService,
     QuestionImportEngineService,
     TrustedQuestionDatabaseImportService,
+    ExcelImportService,
   ],
   exports: [
     SourcesService,
@@ -59,6 +62,7 @@ import { SourcesService } from './sources/sources.service';
     QuestionImportEngineService,
     TrustedQuestionDatabaseImportService,
     ExamModelHierarchyValidator,
+    ExcelImportService,
   ],
 })
 export class ContentModule {}

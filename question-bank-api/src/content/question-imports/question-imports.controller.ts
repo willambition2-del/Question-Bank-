@@ -31,16 +31,92 @@ import {
   type UploadedImportFile,
 } from './question-imports.service';
 
+import { ExcelImportService } from './excel-import.service';
+import type { ExcelImportPreview } from './excel-import.service';
+import { GradeLevel } from '../../generated/prisma/enums';
+import type { Response } from 'express';
+import { Res } from '@nestjs/common';
+
 @ApiTags('Question Imports')
 @ApiBearerAuth('access-token')
-@Roles(UserRole.SUPER_ADMIN)
+@Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
 @Controller('admin/question-imports')
 export class QuestionImportsController {
   constructor(
     private readonly imports: QuestionImportsService,
     private readonly engine: QuestionImportEngineService,
     private readonly trustedImport: TrustedQuestionDatabaseImportService,
+    private readonly excelService: ExcelImportService,
   ) {}
+
+  @Get('templates/questions')
+  @ApiOperation({ summary: 'Download questions Excel template (.xlsx)' })
+  async downloadQuestionsTemplate(@Res() res: Response) {
+    const buffer = await this.excelService.generateQuestionsTemplate();
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="questions_template.xlsx"',
+    );
+    res.send(buffer);
+  }
+
+  @Get('templates/exam-models')
+  @ApiOperation({ summary: 'Download exam models Excel template (.xlsx)' })
+  async downloadExamModelsTemplate(@Res() res: Response) {
+    const buffer = await this.excelService.generateExamModelsTemplate();
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="exam_models_template.xlsx"',
+    );
+    res.send(buffer);
+  }
+
+  @Post('excel/preview')
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024 } }),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Preview and validate questions from Excel file' })
+  async previewExcel(
+    @Body('gradeLevel') gradeLevel: GradeLevel,
+    @Body('subjectId') subjectId: string,
+    @UploadedFile() file?: UploadedImportFile,
+  ) {
+    if (!file || !file.buffer) {
+      throw new Error('الملف مطلوب');
+    }
+    const preview = await this.excelService.previewExcel(
+      file.buffer,
+      gradeLevel,
+      subjectId,
+    );
+    return { data: preview };
+  }
+
+  @Post('excel/confirm')
+  @ApiOperation({ summary: 'Confirm and execute Excel question import' })
+  async confirmExcel(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Body('preview') preview: ExcelImportPreview,
+    @Body('unitId') unitId?: string,
+    @Body('lessonId') lessonId?: string,
+  ) {
+    const result = await this.excelService.confirmImport(
+      preview,
+      actor.userId,
+      unitId,
+      lessonId,
+    );
+    return { data: result };
+  }
 
   @Post('upload')
   @UseInterceptors(

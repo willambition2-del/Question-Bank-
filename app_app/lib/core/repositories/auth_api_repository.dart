@@ -110,6 +110,54 @@ final class AuthApiRepository implements AuthRepository {
   }
 
   @override
+  Future<StudentModel> completeOnboarding({
+    required String schoolName,
+    required String governorate,
+    required String gradeLevel,
+    String? phone,
+  }) async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/users/complete-onboarding',
+        data: {
+          'schoolName': schoolName.trim(),
+          'governorate': governorate.trim(),
+          'gradeLevel': gradeLevel,
+          if (phone != null && phone.trim().isNotEmpty) 'phone': phone.trim(),
+        },
+      );
+      return _studentFromJson(requireObject(response.data));
+    } on DioException catch (error) {
+      throwApiError(error);
+    }
+  }
+
+  @override
+  Future<StudentModel> updateProfile({
+    String? name,
+    String? schoolName,
+    String? governorate,
+    String? gradeLevel,
+    String? phone,
+  }) async {
+    try {
+      final response = await _dio.patch<Map<String, dynamic>>(
+        '/users/me',
+        data: {
+          if (name != null) 'name': name.trim(),
+          if (schoolName != null) 'schoolName': schoolName.trim(),
+          if (governorate != null) 'governorate': governorate.trim(),
+          if (gradeLevel != null) 'gradeLevel': gradeLevel,
+          if (phone != null) 'phone': phone.trim(),
+        },
+      );
+      return _studentFromJson(requireObject(response.data));
+    } on DioException catch (error) {
+      throwApiError(error);
+    }
+  }
+
+  @override
   Future<void> updateStudentPointsAndStats(
     int points,
     int completedQuestions,
@@ -155,6 +203,9 @@ final class AuthApiRepository implements AuthRepository {
       phone: json['phone']?.toString() ?? '',
       email: json['email']?.toString(),
       schoolName: json['schoolName']?.toString() ?? '',
+      governorate: json['governorate']?.toString(),
+      gradeLevel: json['gradeLevel']?.toString() ?? 'THIRD_SECONDARY',
+      onboardingCompleted: json['onboardingCompleted'] == true,
       level: 1,
       points: 0,
       rank: 0,

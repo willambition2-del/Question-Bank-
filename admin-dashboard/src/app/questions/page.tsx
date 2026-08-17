@@ -5,6 +5,8 @@ import useSWR from "swr";
 import Link from "next/link";
 import { Sidebar } from "@/components/Sidebar";
 import api from "@/lib/axios";
+import { GradeSelector, GradeLevel } from "@/components/GradeSelector";
+import { ExcelImportModal } from "@/components/ExcelImportModal";
 import { 
   CheckCircle2, 
   Loader2, 
@@ -16,7 +18,8 @@ import {
   Clock,
   Archive,
   UploadCloud,
-  DownloadCloud
+  DownloadCloud,
+  FileSpreadsheet
 } from "lucide-react";
 
 type Question = {
@@ -33,6 +36,8 @@ const fetcher = (url: string) => api.get(url).then(res => res.data);
 export default function QuestionsPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
+  const [grade, setGrade] = useState<GradeLevel>("THIRD_SECONDARY");
+  const [isExcelModalOpen, setIsExcelModalOpen] = useState(false);
   const [editing, setEditing] = useState<Question | null>(null);
   const [draft, setDraft] = useState("");
 
@@ -42,8 +47,9 @@ export default function QuestionsPage() {
     const params = new URLSearchParams({ limit: "50", page: page.toString() });
     if (search) params.append("search", search);
     if (status) params.append("reviewStatus", status);
+    if (grade) params.append("gradeLevel", grade);
     return params.toString();
-  }, [search, status, page]);
+  }, [search, status, grade, page]);
 
   const { data, error, isLoading, mutate } = useSWR(`/admin/questions?${query}`, fetcher);
   const items: Question[] = data?.data || [];
@@ -100,7 +106,7 @@ export default function QuestionsPage() {
     <div className="flex min-h-screen bg-gray-50" dir="rtl">
       <Sidebar />
       <main className="flex-1 p-8 overflow-y-auto">
-        <header className="flex justify-between items-center mb-8">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
               <FileText className="w-8 h-8 text-blue-600" />
@@ -110,18 +116,26 @@ export default function QuestionsPage() {
               إدارة، إضافة، ومراجعة الأسئلة لجميع المواد الدراسية. الإجمالي: {meta.total} سؤال.
             </p>
           </div>
-          <div className="flex gap-3">
-            <Link href="/questions/import" className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-50">
-              <UploadCloud className="w-4 h-4" /> استيراد
-            </Link>
-            <button className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-gray-50">
-              <DownloadCloud className="w-4 h-4" /> تصدير
+          <div className="flex flex-wrap items-center gap-3">
+            <GradeSelector selectedGrade={grade} onGradeChange={setGrade} />
+            <button
+              onClick={() => setIsExcelModalOpen(true)}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl flex items-center gap-2 shadow-sm font-semibold text-sm transition-all"
+            >
+              <FileSpreadsheet className="w-4 h-4" /> استيراد أسئلة من Excel
             </button>
-            <Link href="/questions/new" className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 shadow-sm">
-              <Plus className="w-5 h-5" /> إضافة سؤال
+            <Link href="/questions/new" className="bg-blue-600 text-white px-4 py-2 rounded-xl flex items-center gap-2 hover:bg-blue-700 shadow-sm font-semibold text-sm transition-all">
+              <Plus className="w-4 h-4" /> إضافة سؤال
             </Link>
           </div>
         </header>
+
+        <ExcelImportModal
+          isOpen={isExcelModalOpen}
+          onClose={() => setIsExcelModalOpen(false)}
+          onSuccess={() => mutate()}
+          initialGrade={grade}
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           {[

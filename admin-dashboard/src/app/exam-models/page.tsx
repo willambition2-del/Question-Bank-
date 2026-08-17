@@ -2,16 +2,21 @@
 
 import { Sidebar } from "@/components/Sidebar";
 import api from "@/lib/axios";
-import { Plus, Search, Archive, Edit2, FileText } from "lucide-react";
+import { Plus, Search, Archive, Edit2, FileText, FileSpreadsheet, Download } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import useSWR from "swr";
+import { GradeSelector, GradeLevel } from "@/components/GradeSelector";
+import { ExcelImportModal } from "@/components/ExcelImportModal";
 
 const fetcher = (url: string) => api.get(url).then(res => res.data);
 
 export default function ExamModelsPage() {
   const [search, setSearch] = useState("");
+  const [grade, setGrade] = useState<GradeLevel>("THIRD_SECONDARY");
+  const [isExcelModalOpen, setIsExcelModalOpen] = useState(false);
   const [page, setPage] = useState(1);
+  const [downloading, setDownloading] = useState(false);
   const limit = 20;
 
   const { data, error, isLoading, mutate } = useSWR(
@@ -32,25 +37,70 @@ export default function ExamModelsPage() {
     }
   };
 
+  const downloadExamTemplate = async () => {
+    setDownloading(true);
+    try {
+      const res = await api.get("/admin/question-imports/templates/exam-models", {
+        responseType: "blob",
+      });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "قالب_استيراد_النماذج_الامتحانية.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err: any) {
+      alert("حدث خطأ أثناء تحميل القالب");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-slate-50" dir="rtl">
       <Sidebar />
       <main className="flex-1 p-8">
-        <header className="flex justify-between items-center mb-8">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">النماذج الامتحانية</h1>
+            <h1 className="text-3xl font-bold text-slate-900">النماذج والاختبارات الامتحانية</h1>
             <p className="text-slate-500 mt-2">
-              إدارة نماذج الاختبارات والمسابقات الجاهزة (Quizzes).
+              إدارة نماذج الاختبارات والمسابقات الجاهزة (Quizzes & Exam Models).
             </p>
           </div>
-          <Link
-            href="/exam-models/new"
-            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
-          >
-            <Plus className="w-5 h-5" />
-            إضافة نموذج جديد
-          </Link>
+          <div className="flex flex-wrap items-center gap-3">
+            <GradeSelector selectedGrade={grade} onGradeChange={setGrade} />
+            <button
+              onClick={() => setIsExcelModalOpen(true)}
+              className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition-all"
+            >
+              <FileSpreadsheet className="w-4 h-4" />
+              استيراد اختبارات / نماذج من Excel
+            </button>
+            <button
+              onClick={downloadExamTemplate}
+              disabled={downloading}
+              className="flex items-center gap-2 bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded-xl hover:bg-slate-50 text-sm font-semibold shadow-sm transition-all"
+            >
+              <Download className="w-4 h-4 text-emerald-600" />
+              تحميل قالب النماذج (.xlsx)
+            </button>
+            <Link
+              href="/exam-models/new"
+              className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl hover:bg-indigo-700 text-sm font-semibold shadow-sm transition-all"
+            >
+              <Plus className="w-5 h-5" />
+              إضافة نموذج جديد
+            </Link>
+          </div>
         </header>
+
+        <ExcelImportModal
+          isOpen={isExcelModalOpen}
+          onClose={() => setIsExcelModalOpen(false)}
+          onSuccess={() => mutate()}
+          initialGrade={grade}
+        />
 
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6 flex gap-4">
           <div className="flex-1 relative">

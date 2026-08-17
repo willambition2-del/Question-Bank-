@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { ExamModel, Prisma } from '../../generated/prisma/client';
-import { QuestionReviewStatus } from '../../generated/prisma/enums';
+import { GradeLevel, QuestionReviewStatus } from '../../generated/prisma/enums';
 import { createPageMeta } from '../../common/pagination/pagination';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
@@ -56,9 +56,24 @@ export class ExamModelsService {
     }
   }
 
-  async listStudent(query: ExamModelQueryDto) {
+  async listStudent(query: ExamModelQueryDto, userId?: string) {
+    let userGrade: GradeLevel = GradeLevel.THIRD_SECONDARY;
+    if (userId) {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { gradeLevel: true },
+      });
+      if (user?.gradeLevel) userGrade = user.gradeLevel;
+    }
     const candidates = await this.prisma.examModel.findMany({
-      where: this.buildWhere(query, true),
+      where: {
+        ...this.buildWhere(query, true),
+        subject: {
+          isActive: true,
+          deletedAt: null,
+          grade: { isActive: true, deletedAt: null, code: userGrade },
+        },
+      },
       include: detailInclude,
       orderBy: this.orderBy(query.sort),
     });

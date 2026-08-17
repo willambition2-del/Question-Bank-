@@ -1,4 +1,4 @@
-import { CompanionType, UserRole } from '../../generated/prisma/enums';
+import { CompanionType, GradeLevel, UserRole } from '../../generated/prisma/enums';
 
 export interface PublicUser {
   id: string;
@@ -9,6 +9,9 @@ export interface PublicUser {
   role: UserRole;
   companion: CompanionType;
   schoolName: string | null;
+  governorate: string | null;
+  gradeLevel: GradeLevel | null;
+  onboardingCompleted: boolean;
   isActive: boolean;
   lastLoginAt: Date | null;
   createdAt: Date;

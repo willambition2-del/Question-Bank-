@@ -5,6 +5,9 @@ class StudentModel {
   final String phone;
   final String? email;
   final String schoolName;
+  final String? governorate;
+  final String? gradeLevel;
+  final bool onboardingCompleted;
   final int level;
   final int points;
   final int rank;
@@ -21,6 +24,9 @@ class StudentModel {
     required this.phone,
     this.email,
     required this.schoolName,
+    this.governorate,
+    this.gradeLevel = 'THIRD_SECONDARY',
+    this.onboardingCompleted = false,
     required this.level,
     required this.points,
     required this.rank,
@@ -38,6 +44,9 @@ class StudentModel {
     String? phone,
     String? email,
     String? schoolName,
+    String? governorate,
+    String? gradeLevel,
+    bool? onboardingCompleted,
     int? level,
     int? points,
     int? rank,
@@ -54,6 +63,9 @@ class StudentModel {
       phone: phone ?? this.phone,
       email: email ?? this.email,
       schoolName: schoolName ?? this.schoolName,
+      governorate: governorate ?? this.governorate,
+      gradeLevel: gradeLevel ?? this.gradeLevel,
+      onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
       level: level ?? this.level,
       points: points ?? this.points,
       rank: rank ?? this.rank,
@@ -65,3 +77,4 @@ class StudentModel {
     );
   }
 }
+

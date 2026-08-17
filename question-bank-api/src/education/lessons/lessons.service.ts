@@ -12,13 +12,23 @@ import {
   educationNotFound,
   isUniqueConstraintError,
 } from '../education-errors';
+import { GradeLevel } from '../../generated/prisma/enums';
 import { toAdminLesson, toStudentLesson } from '../education.mapper';
 
 @Injectable()
 export class LessonsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private async getStudentGradeLevel(userId: string): Promise<GradeLevel> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { gradeLevel: true },
+    });
+    return user?.gradeLevel ?? GradeLevel.THIRD_SECONDARY;
+  }
+
   async listPublishedByUnit(userId: string, unitId: string) {
+    const userGrade = await this.getStudentGradeLevel(userId);
     const unit = await this.prisma.unit.findFirst({
       where: {
         id: unitId,
@@ -30,7 +40,7 @@ export class LessonsService {
           isPublished: true,
           deletedAt: null,
           curriculum: { isActive: true, deletedAt: null },
-          grade: { isActive: true, deletedAt: null },
+          grade: { isActive: true, deletedAt: null, code: userGrade },
         },
       },
       select: { id: true },
@@ -54,6 +64,7 @@ export class LessonsService {
   }
 
   async getPublished(userId: string, id: string) {
+    const userGrade = await this.getStudentGradeLevel(userId);
     const lesson = await this.prisma.lesson.findFirst({
       where: {
         id,
@@ -65,7 +76,7 @@ export class LessonsService {
           isPublished: true,
           deletedAt: null,
           curriculum: { isActive: true, deletedAt: null },
-          grade: { isActive: true, deletedAt: null },
+          grade: { isActive: true, deletedAt: null, code: userGrade },
         },
         unit: { isActive: true, isPublished: true, deletedAt: null },
       },

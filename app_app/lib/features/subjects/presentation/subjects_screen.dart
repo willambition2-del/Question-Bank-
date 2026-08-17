@@ -8,6 +8,7 @@ import '../../../core/widgets/loading_skeleton.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/error_state.dart';
 import '../providers/subjects_provider.dart';
+import '../../auth/providers/auth_provider.dart';
 
 class SubjectsScreen extends ConsumerStatefulWidget {
   const SubjectsScreen({super.key});
@@ -478,7 +479,15 @@ class _SubjectsScreenState extends ConsumerState<SubjectsScreen> {
                     onRetry: () => notifier.loadSubjects(),
                   ),
                   data: (_) {
+                    final student = ref.watch(authProvider);
                     if (filteredSubjects.isEmpty) {
+                      if (student?.gradeLevel == 'NINTH') {
+                        return const EmptyState(
+                          title: "محتوى الصف التاسع قيد الإضافة 📚",
+                          message:
+                              "سيتم توفير المواد والأسئلة والنماذج الخاصة بالصف التاسع قريبًا.",
+                        );
+                      }
                       return const EmptyState(
                         title: "لا توجد مواد مطابقة",
                         message: "لا توجد مواد متاحة الآن.",

@@ -27,6 +27,9 @@ import '../../features/assistant/presentation/assistant_screen.dart';
 import '../../features/curriculum/presentation/curriculum_subjects_screen.dart';
 import '../../features/curriculum/presentation/curriculum_resources_screen.dart';
 
+import '../../features/onboarding/presentation/complete_profile_screen.dart';
+import '../../features/auth/providers/auth_provider.dart';
+
 import 'tab_index_provider.dart';
 
 final appRouter = GoRouter(
@@ -38,6 +41,11 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/onboarding',
       builder: (context, state) => const OnboardingScreen(),
+    ),
+    // Complete Profile / Mandatory Onboarding Route
+    GoRoute(
+      path: '/complete-profile',
+      builder: (context, state) => const CompleteProfileScreen(),
     ),
     // Auth Routes
     GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),

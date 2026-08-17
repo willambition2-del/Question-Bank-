@@ -7,6 +7,8 @@ import { MistakeQueryDto } from './dto/progress.dto';
 import { progressNotFound } from './progress-errors';
 import { visibleQuestionWhere } from './progress-visibility';
 
+import { GradeLevel } from '../generated/prisma/enums';
+
 const mistakeInclude = {
   question: { include: { options: true, readingPassage: true } },
 } satisfies Prisma.StudentQuestionProgressInclude;
@@ -19,7 +21,16 @@ type MistakeRecord = Prisma.StudentQuestionProgressGetPayload<{
 export class MistakesService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private async getStudentGradeLevel(userId: string): Promise<GradeLevel> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { gradeLevel: true },
+    });
+    return user?.gradeLevel ?? GradeLevel.THIRD_SECONDARY;
+  }
+
   async list(userId: string, query: MistakeQueryDto) {
+    const userGrade = await this.getStudentGradeLevel(userId);
     const where: Prisma.StudentQuestionProgressWhereInput = {
       userId,
       wrongCount: { gte: query.minWrongCount },
@@ -28,7 +39,7 @@ export class MistakesService {
       ...(query.reviewed !== undefined
         ? { manualReviewedAt: query.reviewed ? { not: null } : null }
         : {}),
-      question: visibleQuestionWhere(query),
+      question: visibleQuestionWhere({ ...query, gradeLevel: userGrade }),
     };
     const [items, totalItems] = await this.prisma.$transaction([
       this.prisma.studentQuestionProgress.findMany({
@@ -47,13 +58,14 @@ export class MistakesService {
   }
 
   async get(userId: string, questionId: string) {
+    const userGrade = await this.getStudentGradeLevel(userId);
     const item = await this.prisma.studentQuestionProgress.findFirst({
       where: {
         userId,
         questionId,
         wrongCount: { gt: 0 },
         lastAnswerCorrect: false,
-        question: visibleQuestionWhere(),
+        question: visibleQuestionWhere({ gradeLevel: userGrade }),
       },
       include: mistakeInclude,
     });
@@ -62,12 +74,13 @@ export class MistakesService {
   }
 
   async markReviewed(userId: string, questionId: string) {
+    const userGrade = await this.getStudentGradeLevel(userId);
     const existing = await this.prisma.studentQuestionProgress.findFirst({
       where: {
         userId,
         questionId,
         wrongCount: { gt: 0 },
-        question: visibleQuestionWhere(),
+        question: visibleQuestionWhere({ gradeLevel: userGrade }),
       },
       select: { id: true, isMastered: true, manualReviewedAt: true },
     });

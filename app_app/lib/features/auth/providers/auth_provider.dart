@@ -222,7 +222,47 @@ class AuthNotifier extends Notifier<StudentModel?> {
     return false;
   }
 
+  Future<bool> completeOnboarding({
+    required String schoolName,
+    required String governorate,
+    required String gradeLevel,
+    String? phone,
+  }) async {
+    try {
+      final updated = await ref.read(authRepositoryProvider).completeOnboarding(
+            schoolName: schoolName,
+            governorate: governorate,
+            gradeLevel: gradeLevel,
+            phone: phone,
+          );
+      state = updated;
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
 
+  Future<bool> updateProfile({
+    String? name,
+    String? schoolName,
+    String? governorate,
+    String? gradeLevel,
+    String? phone,
+  }) async {
+    try {
+      final updated = await ref.read(authRepositoryProvider).updateProfile(
+            name: name,
+            schoolName: schoolName,
+            governorate: governorate,
+            gradeLevel: gradeLevel,
+            phone: phone,
+          );
+      state = updated;
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
 
   Future<void> updateSoundsEnabled(bool enabled) async {
     if (state != null) {

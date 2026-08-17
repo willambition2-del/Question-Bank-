@@ -1,10 +1,11 @@
 import type { Prisma } from '../generated/prisma/client';
-import { QuestionReviewStatus } from '../generated/prisma/enums';
+import { GradeLevel, QuestionReviewStatus } from '../generated/prisma/enums';
 
 export type VisibleQuestionFilters = {
   subjectId?: string;
   unitId?: string;
   lessonId?: string;
+  gradeLevel?: GradeLevel;
   difficulty?: Prisma.EnumQuestionDifficultyFilter['equals'];
   search?: string;
 };
@@ -35,7 +36,13 @@ export function visibleQuestionWhere(
         isPublished: true,
         deletedAt: null,
         curriculum: { is: { isActive: true, deletedAt: null } },
-        grade: { is: { isActive: true, deletedAt: null } },
+        grade: {
+          is: {
+            isActive: true,
+            deletedAt: null,
+            ...(filters.gradeLevel ? { code: filters.gradeLevel } : {}),
+          },
+        },
       },
     },
     AND: [

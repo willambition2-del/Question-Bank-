@@ -1,5 +1,6 @@
 import { Transform } from 'class-transformer';
 import {
+  IsBoolean,
   IsEnum,
   IsOptional,
   IsString,
@@ -7,7 +8,7 @@ import {
   MinLength,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { CompanionType } from '../../generated/prisma/enums';
+import { CompanionType, GradeLevel } from '../../generated/prisma/enums';
 
 const trimOptionalString = ({ value }: { value: unknown }): unknown => {
   if (typeof value !== 'string') {
@@ -43,8 +44,26 @@ export class UpdateProfileDto {
   @MaxLength(150)
   schoolName?: string;
 
+  @ApiPropertyOptional({ example: 'أمانة العاصمة', nullable: true })
+  @Transform(trimOptionalString)
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  governorate?: string;
+
+  @ApiPropertyOptional({ enum: GradeLevel })
+  @IsOptional()
+  @IsEnum(GradeLevel)
+  gradeLevel?: GradeLevel;
+
   @ApiPropertyOptional({ enum: CompanionType })
   @IsOptional()
   @IsEnum(CompanionType)
   companion?: CompanionType;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  onboardingCompleted?: boolean;
 }
+

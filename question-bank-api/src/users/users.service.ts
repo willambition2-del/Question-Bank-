@@ -5,12 +5,15 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CompanionType, UserRole } from '../generated/prisma/enums';
+import { CompanionType, GradeLevel, UserRole } from '../generated/prisma/enums';
 import type { User } from '../generated/prisma/client';
 import { toPublicUser } from '../common/mappers/user.mapper';
 import { PublicUser } from '../common/types/public-user.type';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+
+import { isValidYemenGovernorate } from '../common/constants/governorates.constant';
+import { CompleteOnboardingDto } from './dto/complete-onboarding.dto';
 
 export interface CreateStudentInput {
   name: string;
@@ -18,6 +21,8 @@ export interface CreateStudentInput {
   phone?: string;
   passwordHash: string;
   schoolName?: string;
+  governorate?: string;
+  gradeLevel?: GradeLevel;
   companion: CompanionType;
 }
 
@@ -77,6 +82,9 @@ export class UsersService {
           phone: input.phone,
           passwordHash: input.passwordHash,
           schoolName: input.schoolName,
+          governorate: input.governorate,
+          gradeLevel: input.gradeLevel ?? GradeLevel.THIRD_SECONDARY,
+          onboardingCompleted: false,
           companion: input.companion,
           role: UserRole.STUDENT,
           isActive: true,
@@ -101,6 +109,50 @@ export class UsersService {
     return toPublicUser(user);
   }
 
+  async completeOnboarding(id: string, dto: CompleteOnboardingDto): Promise<PublicUser> {
+    const user = await this.findById(id);
+    if (!user || !user.isActive) {
+      throw new NotFoundException({
+        statusCode: HttpStatus.NOT_FOUND,
+        code: 'USER_NOT_FOUND',
+        message: 'User not found',
+      });
+    }
+
+    if (!isValidYemenGovernorate(dto.governorate)) {
+      throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
+        code: 'INVALID_GOVERNORATE',
+        message: 'المحافظة المختارة غير صالحة. يرجى اختيار محافظة يمنية من القائمة.',
+      });
+    }
+
+    if (dto.phone !== undefined && dto.phone !== user.phone) {
+      const owner = await this.findByPhone(dto.phone);
+      if (owner && owner.id !== id) {
+        throw this.phoneConflict();
+      }
+    }
+
+    try {
+      const updated = await this.prisma.user.update({
+        where: { id },
+        data: {
+          schoolName: dto.schoolName.trim(),
+          governorate: dto.governorate.trim(),
+          gradeLevel: dto.gradeLevel,
+          phone: dto.phone ?? user.phone,
+          onboardingCompleted: true,
+        },
+      });
+
+      return toPublicUser(updated);
+    } catch (error: unknown) {
+      this.throwUniqueConflict(error);
+      throw error;
+    }
+  }
+
   async updateProfile(id: string, dto: UpdateProfileDto): Promise<PublicUser> {
     if (Object.keys(dto).length === 0) {
       throw new BadRequestException({
@@ -119,6 +171,14 @@ export class UsersService {
       });
     }
 
+    if (dto.governorate !== undefined && !isValidYemenGovernorate(dto.governorate)) {
+      throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
+        code: 'INVALID_GOVERNORATE',
+        message: 'المحافظة المختارة غير صالحة. يرجى اختيار محافظة يمنية من القائمة.',
+      });
+    }
+
     if (dto.phone !== undefined && dto.phone !== user.phone) {
       const owner = await this.findByPhone(dto.phone);
       if (owner && owner.id !== id) {
@@ -133,7 +193,10 @@ export class UsersService {
           name: dto.name,
           phone: dto.phone,
           schoolName: dto.schoolName,
+          governorate: dto.governorate,
+          gradeLevel: dto.gradeLevel,
           companion: dto.companion,
+          onboardingCompleted: dto.onboardingCompleted,
         },
       });
 

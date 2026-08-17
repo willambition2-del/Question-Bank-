@@ -6,7 +6,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import type { User } from '../generated/prisma/client';
-import { IdentityProvider, UserRole } from '../generated/prisma/enums';
+import { GradeLevel, IdentityProvider, UserRole } from '../generated/prisma/enums';
 import { AuthResponse } from '../common/interfaces/auth-response.interface';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthService } from './auth.service';
@@ -61,6 +61,8 @@ export class GoogleAuthService {
             email: identity.email,
             passwordHash: null,
             role: UserRole.STUDENT,
+            gradeLevel: GradeLevel.THIRD_SECONDARY,
+            onboardingCompleted: false,
             isActive: true,
             identities: {
               create: {

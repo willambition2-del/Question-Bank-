@@ -101,7 +101,58 @@ class SettingsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
 
-            // --- SECTION 3: SYSTEM & PRIVACY ---
+            // --- SECTION 3: ACADEMIC PROFILE & GRADE ---
+            Text("البيانات الدراسية والصف", style: AppTypography.sectionTitle),
+            const SizedBox(height: AppSpacing.xs),
+            AppCard(
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(
+                      Icons.school_rounded,
+                      color: AppColors.primaryBlue,
+                    ),
+                    title: Text(
+                      "الصف الدراسي الحالي",
+                      style: AppTypography.cardTitle.copyWith(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    subtitle: Text(
+                      student?.gradeLevel == 'NINTH'
+                          ? 'الصف التاسع الأساسي'
+                          : 'الثالث الثانوي (علمي / أدبي)',
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                    onTap: () => _showChangeGradeDialog(context, ref, student?.gradeLevel ?? 'THIRD_SECONDARY'),
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(
+                      Icons.location_city_rounded,
+                      color: AppColors.primaryBlue,
+                    ),
+                    title: Text(
+                      "المدرسة والمحافظة",
+                      style: AppTypography.cardTitle.copyWith(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    subtitle: Text(
+                      "${student?.schoolName ?? 'غير محدد'} • ${student?.governorate ?? 'اليمن'}",
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                    onTap: () => context.push('/complete-profile'),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+
+            // --- SECTION 4: SYSTEM & PRIVACY ---
             Text("النظام واللغة والخصوصية", style: AppTypography.sectionTitle),
             const SizedBox(height: AppSpacing.xs),
             AppCard(
@@ -161,4 +212,59 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
+  void _showChangeGradeDialog(
+    BuildContext context,
+    WidgetRef ref,
+    String currentGrade,
+  ) {
+    final newGrade = currentGrade == 'THIRD_SECONDARY' ? 'NINTH' : 'THIRD_SECONDARY';
+    final newGradeName = newGrade == 'THIRD_SECONDARY' ? 'الثالث الثانوي' : 'الصف التاسع';
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('تغيير الصف الدراسي'),
+        content: Text(
+          'هل تريد تغيير صفك الدراسي إلى "$newGradeName"؟\n\nسيتم عرض المواد والاختبارات والنماذج الخاصة بالصف الجديد دون حذف تقدمك السابق.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final success = await ref
+                  .read(authProvider.notifier)
+                  .updateProfile(gradeLevel: newGrade);
+              if (context.mounted) {
+                if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('تم تحويل الصف الدراسي إلى $newGradeName بنجاح'),
+                      backgroundColor: AppColors.successGreen,
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('تعذر تغيير الصف الدراسي'),
+                      backgroundColor: AppColors.errorCoral,
+                    ),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryBlue,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('تأكيد التغيير'),
+          ),
+        ],
+      ),
+    );
+  }
 }

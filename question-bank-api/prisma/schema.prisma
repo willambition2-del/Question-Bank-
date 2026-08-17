@@ -15,6 +15,11 @@ enum UserRole {
   SUPER_ADMIN
 }
 
+enum GradeLevel {
+  NINTH
+  THIRD_SECONDARY
+}
+
 enum CompanionType {
   MALE
   FEMALE
@@ -414,6 +419,9 @@ model User {
   role                    UserRole                  @default(STUDENT)
   companion               CompanionType             @default(MALE)
   schoolName              String?
+  governorate             String?
+  gradeLevel              GradeLevel?               @default(THIRD_SECONDARY)
+  onboardingCompleted     Boolean                   @default(false)
   isActive                Boolean                   @default(true)
   createdAt               DateTime                  @default(now())
   updatedAt               DateTime                  @updatedAt
@@ -477,6 +485,7 @@ model Grade {
   id               String            @id @default(uuid())
   name             String
   slug             String            @unique
+  code             GradeLevel?       @unique
   description      String?
   sortOrder        Int               @default(0)
   isActive         Boolean           @default(true)

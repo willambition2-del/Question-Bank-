@@ -53,7 +53,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     }
     _navigationStarted = true;
     if (status == AuthSessionStatus.authenticated) {
-      context.go('/home');
+      final user = ref.read(authProvider);
+      if (user != null && !user.onboardingCompleted) {
+        context.go('/complete-profile');
+      } else {
+        context.go('/home');
+      }
       return;
     }
     final preferences = await SharedPreferences.getInstance();
@@ -93,7 +98,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             const SizedBox(height: AppSpacing.xxs),
 
             Text(
-              "طريقك نحو التفوق في الثالث الثانوي",
+              "طريقك نحو التفوق والنجاح الدراسي",
               style: AppTypography.sectionTitle.copyWith(
                 color: AppColors.secondaryText,
                 fontWeight: FontWeight.w600,

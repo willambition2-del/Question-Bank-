@@ -5,11 +5,13 @@ import api from "@/lib/axios";
 import { Plus, Search, Archive, Edit2, UploadCloud, Link as LinkIcon, Trash } from "lucide-react";
 import { useState, useRef } from "react";
 import useSWR from "swr";
+import { GradeSelector, GradeLevel } from "@/components/GradeSelector";
 
 const fetcher = (url: string) => api.get(url).then(res => res.data);
 
 export default function CurriculumPage() {
   const [search, setSearch] = useState("");
+  const [grade, setGrade] = useState<GradeLevel>("THIRD_SECONDARY");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [formData, setFormData] = useState({
@@ -22,7 +24,7 @@ export default function CurriculumPage() {
   });
 
   const { data: resources, error, isLoading, mutate } = useSWR(
-    `/study-resources/admin`,
+    `/study-resources/admin?gradeLevel=${grade}`,
     fetcher
   );
 
@@ -117,20 +119,23 @@ export default function CurriculumPage() {
     <div className="flex min-h-screen bg-slate-50" dir="rtl">
       <Sidebar />
       <main className="flex-1 p-8">
-        <header className="flex justify-between items-center mb-8">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">المنهج والملفات</h1>
             <p className="text-slate-500 mt-2">
               إدارة كتب الوزارة والملازم والمراجعات ورفعها للتطبيق.
             </p>
           </div>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
-          >
-            <Plus className="w-5 h-5" />
-            إضافة ملف جديد
-          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <GradeSelector selectedGrade={grade} onGradeChange={setGrade} />
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl hover:bg-indigo-700 text-sm font-semibold shadow-sm transition-all"
+            >
+              <Plus className="w-5 h-5" />
+              إضافة ملف جديد
+            </button>
+          </div>
         </header>
 
         {isLoading ? (

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { QuestionWithContent } from '../content/content.mapper';
 import { QuestionHierarchyValidator } from '../content/questions/question-hierarchy.validator';
-import { QuestionReviewStatus, QuizScope } from '../generated/prisma/enums';
+import { GradeLevel, QuestionReviewStatus, QuizScope } from '../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateQuizAttemptDto } from './dto/quiz.dto';
 import { quizBadRequest } from './quiz-errors';
@@ -16,10 +16,19 @@ export class QuestionSelectionService {
     private readonly hierarchy: QuestionHierarchyValidator,
   ) {}
 
+  private async getStudentGradeLevel(userId: string): Promise<GradeLevel> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { gradeLevel: true },
+    });
+    return user?.gradeLevel ?? GradeLevel.THIRD_SECONDARY;
+  }
+
   async select(
     userId: string,
     dto: CreateQuizAttemptDto,
   ): Promise<SelectedQuizQuestion[]> {
+    const userGrade = await this.getStudentGradeLevel(userId);
     let questions: QuestionWithContent[];
     let balanceGeneral = false;
     if (dto.scope === QuizScope.EXAM_MODEL) {
@@ -28,11 +37,11 @@ export class QuestionSelectionService {
       dto.scope === QuizScope.MISTAKES ||
       dto.scope === QuizScope.WEAKNESS
     ) {
-      questions = await this.selectProgress(userId, dto);
+      questions = await this.selectProgress(userId, dto, userGrade);
     } else if (dto.scope === QuizScope.SAVED) {
-      questions = await this.selectSaved(userId, dto);
+      questions = await this.selectSaved(userId, dto, userGrade);
     } else {
-      questions = await this.selectGeneral(userId, dto);
+      questions = await this.selectGeneral(userId, dto, userGrade);
       balanceGeneral = true;
     }
     const visible = await this.filterVisible(questions);
@@ -42,7 +51,11 @@ export class QuestionSelectionService {
     return selected.map((question) => ({ question }));
   }
 
-  private async selectGeneral(userId: string, dto: CreateQuizAttemptDto) {
+  private async selectGeneral(
+    userId: string,
+    dto: CreateQuizAttemptDto,
+    userGrade: GradeLevel,
+  ) {
     const recent = await this.prisma.quizAttemptQuestion.findMany({
       where: { attempt: { userId } },
       select: { questionId: true },
@@ -50,21 +63,25 @@ export class QuestionSelectionService {
       take: Math.min(300, dto.questionCount * 3),
     });
     const recentIds = [...new Set(recent.map((item) => item.questionId))];
-    let candidates = await this.findCandidates(userId, dto, recentIds);
+    let candidates = await this.findCandidates(userId, dto, recentIds, userGrade);
     if (candidates.length < dto.questionCount && recentIds.length) {
-      candidates = await this.findCandidates(userId, dto, []);
+      candidates = await this.findCandidates(userId, dto, [], userGrade);
     }
     return this.pick(candidates, dto.questionCount, dto.difficulty === 'MIXED');
   }
 
-  private async selectProgress(userId: string, dto: CreateQuizAttemptDto) {
+  private async selectProgress(
+    userId: string,
+    dto: CreateQuizAttemptDto,
+    userGrade: GradeLevel,
+  ) {
     const items = await this.prisma.studentQuestionProgress.findMany({
       where: {
         userId,
         ...(dto.scope === QuizScope.MISTAKES
           ? { wrongCount: { gt: 0 } }
           : { isMastered: false }),
-        question: this.questionWhere(dto),
+        question: this.questionWhere(dto, userGrade),
       },
       include: {
         question: { include: { options: true, readingPassage: true } },
@@ -89,9 +106,13 @@ export class QuestionSelectionService {
     return items.map((item) => item.question);
   }
 
-  private async selectSaved(userId: string, dto: CreateQuizAttemptDto) {
+  private async selectSaved(
+    userId: string,
+    dto: CreateQuizAttemptDto,
+    userGrade: GradeLevel,
+  ) {
     const items = await this.prisma.savedQuestion.findMany({
-      where: { userId, question: this.questionWhere(dto) },
+      where: { userId, question: this.questionWhere(dto, userGrade) },
       include: {
         question: { include: { options: true, readingPassage: true } },
       },
@@ -109,14 +130,6 @@ export class QuestionSelectionService {
       where: { id: dto.examModelId, isPublished: true, deletedAt: null },
       include: {
         questions: {
-          where: {
-            question: {
-              reviewStatus: QuestionReviewStatus.READY,
-              isActive: true,
-              isPublished: true,
-              deletedAt: null,
-            },
-          },
           include: {
             question: { include: { options: true, readingPassage: true } },
           },
@@ -140,10 +153,11 @@ export class QuestionSelectionService {
     userId: string,
     dto: CreateQuizAttemptDto,
     excludedIds: string[],
+    userGrade: GradeLevel,
   ) {
     return this.prisma.question.findMany({
       where: {
-        ...this.questionWhere(dto),
+        ...this.questionWhere(dto, userGrade),
         ...(excludedIds.length ? { id: { notIn: excludedIds } } : {}),
         ...(dto.excludeMastered
           ? { studentProgress: { none: { userId, isMastered: true } } }
@@ -161,7 +175,7 @@ export class QuestionSelectionService {
     });
   }
 
-  private questionWhere(dto: CreateQuizAttemptDto) {
+  private questionWhere(dto: CreateQuizAttemptDto, userGrade?: GradeLevel) {
     return {
       ...(dto.subjectId ? { subjectId: dto.subjectId } : {}),
       ...(dto.unitId ? { unitId: dto.unitId } : {}),
@@ -170,6 +184,13 @@ export class QuestionSelectionService {
       isActive: true,
       isPublished: true,
       deletedAt: null,
+      subject: {
+        isActive: true,
+        deletedAt: null,
+        ...(userGrade
+          ? { grade: { isActive: true, deletedAt: null, code: userGrade } }
+          : {}),
+      },
       ...(dto.questionTypes?.length ? { type: { in: dto.questionTypes } } : {}),
       ...(dto.difficulty !== 'MIXED' ? { difficulty: dto.difficulty } : {}),
       OR: [

@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { CompanionType, UserRole } from '../../generated/prisma/enums';
+import { CompanionType, GradeLevel, UserRole } from '../../generated/prisma/enums';
 
 export class PublicUserDto {
   @ApiProperty()
@@ -25,6 +25,15 @@ export class PublicUserDto {
 
   @ApiPropertyOptional({ nullable: true })
   schoolName!: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  governorate!: string | null;
+
+  @ApiPropertyOptional({ enum: GradeLevel, nullable: true })
+  gradeLevel!: GradeLevel | null;
+
+  @ApiProperty()
+  onboardingCompleted!: boolean;
 
   @ApiProperty()
   isActive!: boolean;
