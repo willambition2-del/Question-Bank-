@@ -34,6 +34,51 @@ import 'tab_index_provider.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/splash',
+  redirect: (context, state) {
+    final loc = state.matchedLocation;
+    if (loc == '/splash') return null;
+
+    try {
+      final container = ProviderScope.containerOf(context, listen: false);
+      final status = container.read(authSessionStatusProvider);
+      if (status == AuthSessionStatus.initial ||
+          status == AuthSessionStatus.restoring) {
+        return null;
+      }
+
+      final user = container.read(authProvider);
+      final isAuthenticated =
+          status == AuthSessionStatus.authenticated && user != null;
+
+      final isAuthRoute =
+          loc == '/login' || loc == '/register' || loc == '/onboarding';
+      final isCompleteProfileRoute = loc == '/complete-profile';
+
+      if (!isAuthenticated) {
+        if (!isAuthRoute) {
+          return '/login';
+        }
+        return null;
+      }
+
+      // Authenticated but profile is incomplete
+      if (!user.onboardingCompleted) {
+        if (!isCompleteProfileRoute) {
+          return '/complete-profile';
+        }
+        return null;
+      }
+
+      // Authenticated with complete profile
+      if (isAuthRoute || isCompleteProfileRoute) {
+        return '/home';
+      }
+    } catch (_) {
+      // Container not available in isolated test environments
+    }
+
+    return null;
+  },
   routes: [
     // Splash Route
     GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),

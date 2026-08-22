@@ -66,6 +66,7 @@ final class SubjectsApiRepository implements SubjectsRepository {
       name: json['name']?.toString() ?? '',
       icon: json['iconKey']?.toString() ?? 'book',
       colorHex: json['colorHex']?.toString() ?? '#315BE8',
+      coverImageUrl: json['coverImageUrl']?.toString(),
       unitsCount: (json['unitsCount'] as num?)?.toInt() ?? 0,
       lessonsCount: (json['lessonsCount'] as num?)?.toInt() ?? 0,
       questionsCount: (json['questionsCount'] as num?)?.toInt() ?? 0,

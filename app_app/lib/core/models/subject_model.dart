@@ -3,6 +3,7 @@ class SubjectModel {
   final String name;
   final String icon;
   final String colorHex;
+  final String? coverImageUrl;
   final int unitsCount;
   final int lessonsCount;
   final int questionsCount;
@@ -18,6 +19,7 @@ class SubjectModel {
     required this.name,
     required this.icon,
     required this.colorHex,
+    this.coverImageUrl,
     required this.unitsCount,
     required this.lessonsCount,
     required this.questionsCount,
@@ -34,6 +36,7 @@ class SubjectModel {
     String? name,
     String? icon,
     String? colorHex,
+    String? coverImageUrl,
     int? unitsCount,
     int? lessonsCount,
     int? questionsCount,
@@ -49,6 +52,7 @@ class SubjectModel {
       name: name ?? this.name,
       icon: icon ?? this.icon,
       colorHex: colorHex ?? this.colorHex,
+      coverImageUrl: coverImageUrl ?? this.coverImageUrl,
       unitsCount: unitsCount ?? this.unitsCount,
       lessonsCount: lessonsCount ?? this.lessonsCount,
       questionsCount: questionsCount ?? this.questionsCount,

@@ -8,11 +8,14 @@ import {
 import {
   AiResetPeriod,
   RoutingStrategy,
+  ServiceProviderAuthType,
+  ServiceProviderType,
   ServiceTaskType,
   UserRole,
 } from '../../generated/prisma/enums';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RedisService } from '../../redis/redis.service';
+import { CURATED_NVIDIA_MODELS } from '../providers/nvidia-compatible.adapter';
 import type {
   UpdateAiAssistantSettingsDto,
   UserUsageQueryDto,
@@ -101,14 +104,20 @@ export class AiAssistantSettingsService {
   ) {}
 
   async getSettings() {
+    await this.ensureNvidiaProvider();
+
     let setting = await this.prisma.aiAssistantSetting.findUnique({
       where: { id: 'default' },
     });
     if (!setting) {
+      const nvidia = await this.prisma.serviceProvider.findUnique({
+        where: { key: 'nvidia' },
+      });
       setting = await this.prisma.aiAssistantSetting.create({
         data: {
           id: 'default',
           enabled: false,
+          providerId: nvidia?.id ?? null,
           userMessageLimit: 20,
           resetPeriod: AiResetPeriod.DAILY,
           limitMessage: 'لقد وصلت إلى الحد المسموح للمساعد الذكي.',
@@ -118,18 +127,94 @@ export class AiAssistantSettingsService {
     return setting;
   }
 
-  async updateSettings(actorId: string, dto: UpdateAiAssistantSettingsDto) {
-    if (dto.modelId) {
-      const model = await this.prisma.serviceModel.findUnique({
-        where: { id: dto.modelId },
+  async ensureNvidiaProvider() {
+    let nvidia = await this.prisma.serviceProvider.findUnique({
+      where: { key: 'nvidia' },
+      include: { models: true },
+    });
+    if (!nvidia) {
+      nvidia = await this.prisma.serviceProvider.create({
+        data: {
+          key: 'nvidia',
+          displayNameInternal: 'NVIDIA NIM Hosted API',
+          providerType: ServiceProviderType.NVIDIA,
+          baseUrl: 'https://integrate.api.nvidia.com/v1',
+          authType: ServiceProviderAuthType.BEARER,
+          enabled: true,
+          priority: 1,
+          timeoutMs: 30000,
+          maxRetries: 1,
+          createdById: 'system',
+          updatedById: 'system',
+        },
+        include: { models: true },
+      });
+    }
+
+    if (nvidia.models.length === 0) {
+      for (const m of CURATED_NVIDIA_MODELS) {
+        await this.prisma.serviceModel
+          .create({
+            data: {
+              providerId: nvidia.id,
+              internalName: m.name,
+              remoteModelId: m.id,
+              enabled: true,
+              supportsText: true,
+              contextWindow: m.contextWindow,
+              maxOutputTokens: 2048,
+            },
+          })
+          .catch(() => {});
+      }
+    }
+    return nvidia;
+  }
+
+  private async resolveModel(modelInput: string, providerId?: string | null) {
+    let model = await this.prisma.serviceModel.findUnique({
+      where: { id: modelInput },
+      include: { provider: true },
+    });
+    if (model) return model;
+
+    if (providerId) {
+      model = await this.prisma.serviceModel.findFirst({
+        where: { remoteModelId: modelInput, providerId },
         include: { provider: true },
       });
+      if (model) return model;
+
+      return this.prisma.serviceModel.create({
+        data: {
+          providerId,
+          internalName: modelInput.split('/').pop() || modelInput,
+          remoteModelId: modelInput,
+          enabled: true,
+          supportsText: true,
+          contextWindow: 131072,
+          maxOutputTokens: 2048,
+        },
+        include: { provider: true },
+      });
+    }
+
+    return null;
+  }
+
+  async updateSettings(actorId: string, dto: UpdateAiAssistantSettingsDto) {
+    let resolvedModelId = dto.modelId;
+    let resolvedFallbackModelId = dto.fallbackModelId;
+
+    if (dto.modelId) {
+      const model = await this.resolveModel(dto.modelId, dto.providerId);
       if (!model) {
         throw new BadRequestException({
           code: 'MODEL_NOT_FOUND',
           message: 'Selected model does not exist',
         });
       }
+      resolvedModelId = model.id;
       if (dto.providerId && model.providerId !== dto.providerId) {
         throw new BadRequestException({
           code: 'MODEL_PROVIDER_MISMATCH',
@@ -137,24 +222,30 @@ export class AiAssistantSettingsService {
         });
       }
       if (dto.enabled && (!model.enabled || !model.provider.enabled)) {
-        throw new BadRequestException({
-          code: 'CANNOT_ENABLE_DISABLED_MODEL',
-          message:
-            'Cannot enable AI assistant with disabled provider or model. Please enable the provider and model first.',
+        // Auto-enable model and provider if requested
+        await this.prisma.serviceModel.update({
+          where: { id: model.id },
+          data: { enabled: true },
+        });
+        await this.prisma.serviceProvider.update({
+          where: { id: model.providerId },
+          data: { enabled: true },
         });
       }
     }
 
     if (dto.fallbackModelId) {
-      const fallback = await this.prisma.serviceModel.findUnique({
-        where: { id: dto.fallbackModelId },
-      });
+      const fallback = await this.resolveModel(
+        dto.fallbackModelId,
+        dto.providerId,
+      );
       if (!fallback) {
         throw new BadRequestException({
           code: 'FALLBACK_MODEL_NOT_FOUND',
           message: 'Selected fallback model does not exist',
         });
       }
+      resolvedFallbackModelId = fallback.id;
     }
 
     const current = await this.getSettings();
@@ -164,10 +255,11 @@ export class AiAssistantSettingsService {
         enabled: dto.enabled !== undefined ? dto.enabled : current.enabled,
         providerId:
           dto.providerId !== undefined ? dto.providerId : current.providerId,
-        modelId: dto.modelId !== undefined ? dto.modelId : current.modelId,
+        modelId:
+          resolvedModelId !== undefined ? resolvedModelId : current.modelId,
         fallbackModelId:
-          dto.fallbackModelId !== undefined
-            ? dto.fallbackModelId
+          resolvedFallbackModelId !== undefined
+            ? resolvedFallbackModelId
             : current.fallbackModelId,
         userMessageLimit:
           dto.userMessageLimit !== undefined

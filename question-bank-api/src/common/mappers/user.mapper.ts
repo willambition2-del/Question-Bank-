@@ -19,6 +19,16 @@ export interface PublicUserSource {
 }
 
 export function toPublicUser(user: PublicUserSource): PublicUser {
+  const hasSchoolName = Boolean(user.schoolName && user.schoolName.trim().length > 0);
+  const hasGovernorate = Boolean(user.governorate && user.governorate.trim().length > 0);
+  const hasGradeLevel = Boolean(user.gradeLevel);
+  const isComplete = Boolean(
+    user.onboardingCompleted &&
+    hasSchoolName &&
+    hasGovernorate &&
+    hasGradeLevel
+  );
+
   return {
     id: user.id,
     name: user.name,
@@ -30,7 +40,7 @@ export function toPublicUser(user: PublicUserSource): PublicUser {
     schoolName: user.schoolName,
     governorate: user.governorate ?? null,
     gradeLevel: user.gradeLevel ?? null,
-    onboardingCompleted: Boolean(user.onboardingCompleted),
+    onboardingCompleted: isComplete,
     isActive: user.isActive,
     lastLoginAt: user.lastLoginAt,
     createdAt: user.createdAt,

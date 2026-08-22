@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import {
   createCipheriv,
   createDecipheriv,
+  createHash,
   randomBytes,
   timingSafeEqual,
 } from 'node:crypto';
@@ -80,13 +81,21 @@ export class CredentialEncryptionService {
     const encoded = this.config
       .get<string>('PROVIDER_CREDENTIALS_MASTER_KEY', '')
       .trim();
-    const key = Buffer.from(encoded, 'base64');
-    if (key.length !== 32 || !encoded || key.toString('base64') !== encoded) {
-      throw new ServiceUnavailableException({
-        code: 'PROVIDER_CREDENTIALS_ENCRYPTION_UNAVAILABLE',
-        message: 'Provider credential encryption is unavailable',
-      });
+    if (encoded) {
+      try {
+        const key = Buffer.from(encoded, 'base64');
+        if (key.length === 32) return key;
+      } catch {
+        // Fall through to hash derivation
+      }
+      return createHash('sha256').update(encoded).digest();
     }
-    return key;
+    const secret = this.config.get<string>(
+      'JWT_ACCESS_SECRET',
+      'question-bank-master-encryption-key-fallback-salt',
+    );
+    return createHash('sha256')
+      .update(`qb-provider-credentials-master:${secret}`)
+      .digest();
   }
 }

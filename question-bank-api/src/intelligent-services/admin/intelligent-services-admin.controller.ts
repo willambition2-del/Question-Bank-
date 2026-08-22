@@ -68,6 +68,48 @@ export class IntelligentServicesAdminController {
     return this.data(this.admin.updateAssistantSettings(actor.userId, dto));
   }
 
+  @Get('nvidia/config')
+  @ApiOperation({ summary: 'Get NVIDIA provider configuration and status' })
+  getNvidiaConfig() {
+    return this.data(this.admin.getNvidiaConfig());
+  }
+
+  @Patch('nvidia/config')
+  @ApiOperation({ summary: 'Update NVIDIA API key and configuration' })
+  updateNvidiaConfig(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Body()
+    dto: {
+      apiKey?: string;
+      baseUrl?: string;
+      enabled?: boolean;
+      removeApiKey?: boolean;
+    },
+  ) {
+    return this.data(this.admin.updateNvidiaConfig(actor.userId, dto));
+  }
+
+  @Get('nvidia/models')
+  @ApiOperation({ summary: 'Discover available NVIDIA NIM models with Free metadata' })
+  discoverNvidiaModels() {
+    return this.data(this.admin.discoverNvidiaModels());
+  }
+
+  @Post('nvidia/test-model')
+  @ApiOperation({ summary: 'Test an NVIDIA model connection and response' })
+  testNvidiaModel(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Body() dto: { modelId: string },
+  ) {
+    if (!dto.modelId?.trim()) {
+      throw new BadRequestException({
+        code: 'MODEL_ID_REQUIRED',
+        message: 'Model ID is required for testing',
+      });
+    }
+    return this.data(this.admin.testNvidiaModel(actor.userId, dto.modelId.trim()));
+  }
+
   @Get('user-usage')
   @ApiOperation({ summary: 'List student message consumption for the current reset period' })
   userUsage(@Query() query: UserUsageQueryDto) {

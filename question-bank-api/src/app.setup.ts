@@ -3,7 +3,9 @@ import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
+import express from 'express';
 import helmet from 'helmet';
+import { join } from 'path';
 import { corsOrigins } from './config/environment';
 
 export function configureApp(app: INestApplication): void {
@@ -12,6 +14,7 @@ export function configureApp(app: INestApplication): void {
   const production = config.get<string>('NODE_ENV') === 'production';
   const allowedOrigins = corsOrigins(config.get<string>('CORS_ORIGINS'));
 
+  app.use('/uploads', express.static(join(process.cwd(), 'uploads')));
   app.setGlobalPrefix(apiPrefix);
   app.use(
     helmet({

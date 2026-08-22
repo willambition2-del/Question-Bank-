@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ServiceProviderType } from '../../generated/prisma/enums';
 import { CustomHttpAdapter } from './custom-http.adapter';
 import { GoogleCompatibleAdapter } from './google-compatible.adapter';
+import { NvidiaCompatibleAdapter } from './nvidia-compatible.adapter';
 import { OpenAiCompatibleAdapter } from './openai-compatible.adapter';
 import {
   ProviderAdapterError,
@@ -16,9 +17,10 @@ export class ProviderAdapterRegistry {
     openAi: OpenAiCompatibleAdapter,
     google: GoogleCompatibleAdapter,
     custom: CustomHttpAdapter,
+    nvidia: NvidiaCompatibleAdapter,
   ) {
     this.adapters = new Map(
-      [openAi, google, custom].map((adapter) => [adapter.type, adapter]),
+      [openAi, google, custom, nvidia].map((adapter) => [adapter.type, adapter]),
     );
   }
 

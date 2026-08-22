@@ -29,6 +29,7 @@ import { KnowledgeRetrievalService } from './knowledge/knowledge-retrieval.servi
 import { OcrService } from './knowledge/ocr.service';
 import { CustomHttpAdapter } from './providers/custom-http.adapter';
 import { GoogleCompatibleAdapter } from './providers/google-compatible.adapter';
+import { NvidiaCompatibleAdapter } from './providers/nvidia-compatible.adapter';
 import { OpenAiCompatibleAdapter } from './providers/openai-compatible.adapter';
 import { ProviderAdapterRegistry } from './providers/provider-adapter.registry';
 import { ProviderUrlSecurityService } from './providers/provider-url-security.service';
@@ -56,6 +57,7 @@ import { UsageGovernanceService } from './usage/usage-governance.service';
     CredentialEncryptionService,
     ProviderUrlSecurityService,
     OpenAiCompatibleAdapter,
+    NvidiaCompatibleAdapter,
     GoogleCompatibleAdapter,
     CustomHttpAdapter,
     ProviderAdapterRegistry,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import useSWR from "swr";
 import { Sidebar } from "@/components/Sidebar";
 import { 
@@ -15,7 +15,12 @@ import {
   CheckCircle,
   XCircle,
   Eye,
-  EyeOff
+  EyeOff,
+  Image as ImageIcon,
+  Upload,
+  X,
+  Sparkles,
+  ExternalLink,
 } from "lucide-react";
 import api from "@/lib/axios";
 
@@ -23,6 +28,12 @@ export default function EducationPage() {
   const [selectedGrade, setSelectedGrade] = useState<any>(null);
   const [selectedSubject, setSelectedSubject] = useState<any>(null);
   const [selectedUnit, setSelectedUnit] = useState<any>(null);
+
+  // Subject Image Upload State
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const [imageSuccess, setImageSuccess] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: gradesData, mutate: mutateGrades } = useSWR('/admin/grades?limit=50', url => api.get(url));
   const grades = gradesData?.data?.data || [];
@@ -63,6 +74,56 @@ export default function EducationPage() {
       mutateFn();
     } catch (err: any) {
       alert(err.response?.data?.message || "حدث خطأ أثناء تغيير الحالة");
+    }
+  };
+
+  const handleImageFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedSubject) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setImageError("حجم الصورة يجب ألا يتجاوز 5 ميغابايت.");
+      return;
+    }
+
+    setIsUploadingImage(true);
+    setImageError(null);
+    setImageSuccess(null);
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    try {
+      const res = await api.post(`/admin/subjects/${selectedSubject.id}/image`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const newUrl = res.data?.data?.coverImageUrl;
+      setSelectedSubject({ ...selectedSubject, coverImageUrl: newUrl });
+      await mutateSubjects();
+      setImageSuccess("تم رفع وتحديث صورة المادة بنجاح!");
+      setTimeout(() => setImageSuccess(null), 4000);
+    } catch (err: any) {
+      setImageError(err?.response?.data?.message || "فشل رفع الصورة. تأكد من أن نوع الملف مدعوم (JPG, PNG, WEBP).");
+    } finally {
+      setIsUploadingImage(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const handleDeleteSubjectImage = async () => {
+    if (!selectedSubject || !confirm("هل أنت متأكد من حذف صورة هذه المادة؟")) return;
+    setIsUploadingImage(true);
+    setImageError(null);
+    try {
+      await api.delete(`/admin/subjects/${selectedSubject.id}/image`);
+      setSelectedSubject({ ...selectedSubject, coverImageUrl: null });
+      await mutateSubjects();
+      setImageSuccess("تم حذف صورة المادة بنجاح.");
+      setTimeout(() => setImageSuccess(null), 3000);
+    } catch (err: any) {
+      setImageError(err?.response?.data?.message || "فشل حذف الصورة.");
+    } finally {
+      setIsUploadingImage(false);
     }
   };
 
@@ -114,6 +175,11 @@ export default function EducationPage() {
                         {item.isActive ? 'منشور' : 'مسودة'}
                       </span>
                     )}
+                    {item.coverImageUrl && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 flex items-center gap-0.5">
+                        <ImageIcon className="w-2.5 h-2.5" /> صورة
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -144,34 +210,152 @@ export default function EducationPage() {
   return (
     <div className="flex min-h-screen bg-gray-50" dir="rtl">
       <Sidebar />
-      <main className="flex-1 p-8 flex gap-4 overflow-x-auto h-screen items-start custom-scrollbar">
-        
-        {renderColumn(
-          "الصفوف", Layers, grades, false, selectedGrade, 
-          (g) => { setSelectedGrade(g); setSelectedSubject(null); setSelectedUnit(null); }, 
-          "/admin/grades", mutateGrades, () => { setSelectedGrade(null); setSelectedSubject(null); setSelectedUnit(null); },
-          "لا توجد صفوف"
-        )}
+      <main className="flex-1 p-8 flex flex-col gap-6 overflow-y-auto h-screen custom-scrollbar">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-black text-gray-900">الهيكل التعليمي وإدارة المواد</h1>
+            <p className="text-gray-500 text-xs mt-0.5">إدارة الصفوف، المواد الدراسية، الصور، الوحدات، والدروس.</p>
+          </div>
+        </div>
 
-        {selectedGrade && renderColumn(
-          "المواد", Book, subjects, isLoadingSubjects, selectedSubject, 
-          (s) => { setSelectedSubject(s); setSelectedUnit(null); }, 
-          "/admin/subjects", mutateSubjects, () => { setSelectedSubject(null); setSelectedUnit(null); },
-          "اختر صفاً لعرض المواد"
-        )}
+        {/* 4 Column Explorer */}
+        <div className="flex gap-4 overflow-x-auto items-start min-h-[420px]">
+          {renderColumn(
+            "الصفوف", Layers, grades, false, selectedGrade, 
+            (g) => { setSelectedGrade(g); setSelectedSubject(null); setSelectedUnit(null); }, 
+            "/admin/grades", mutateGrades, () => { setSelectedGrade(null); setSelectedSubject(null); setSelectedUnit(null); },
+            "لا توجد صفوف"
+          )}
 
-        {selectedSubject && renderColumn(
-          "الوحدات", FolderOpen, units, isLoadingUnits, selectedUnit, 
-          (u) => { setSelectedUnit(u); }, 
-          "/admin/units", mutateUnits, () => { setSelectedUnit(null); },
-          "اختر مادة لعرض الوحدات"
-        )}
+          {selectedGrade && renderColumn(
+            `المواد (${selectedGrade.name})`, Book, subjects, isLoadingSubjects, selectedSubject, 
+            (s) => { setSelectedSubject(s); setSelectedUnit(null); }, 
+            "/admin/subjects", mutateSubjects, () => { setSelectedSubject(null); setSelectedUnit(null); },
+            "اختر صفاً لعرض المواد"
+          )}
 
-        {selectedUnit && renderColumn(
-          "الدروس", FileText, lessons, isLoadingLessons, null, 
-          () => {}, 
-          "/admin/lessons", mutateLessons, () => {},
-          "اختر وحدة لعرض الدروس"
+          {selectedSubject && renderColumn(
+            `الوحدات (${selectedSubject.name})`, FolderOpen, units, isLoadingUnits, selectedUnit, 
+            (u) => { setSelectedUnit(u); }, 
+            "/admin/units", mutateUnits, () => { setSelectedUnit(null); },
+            "اختر مادة لعرض الوحدات"
+          )}
+
+          {selectedUnit && renderColumn(
+            `الدروس (${selectedUnit.name})`, FileText, lessons, isLoadingLessons, null, 
+            () => {}, 
+            "/admin/lessons", mutateLessons, () => {},
+            "اختر وحدة لعرض الدروس"
+          )}
+        </div>
+
+        {/* Subject Cover Image Management Card */}
+        {selectedSubject && (
+          <div className="bg-white rounded-2xl border border-indigo-100 shadow-sm p-6 space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl">
+                  <ImageIcon className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900 text-lg flex items-center gap-2">
+                    إدارة صورة غلاف المادة: <span className="text-indigo-600">{selectedSubject.name}</span>
+                  </h3>
+                  <p className="text-gray-500 text-xs mt-0.5">
+                    الصف: <span className="font-bold text-gray-700">{selectedGrade?.name || "الصف المحدد"}</span> • تُعرض هذه الصورة في واجهة المنهج وبطاقات المواد في التطبيق.
+                  </p>
+                </div>
+              </div>
+
+              {/* Status Alert */}
+              {imageSuccess && (
+                <div className="text-xs bg-green-50 text-green-800 border border-green-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-bold">
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  {imageSuccess}
+                </div>
+              )}
+              {imageError && (
+                <div className="text-xs bg-red-50 text-red-800 border border-red-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-bold">
+                  <XCircle className="w-4 h-4 text-red-600" />
+                  {imageError}
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+              {/* Image Preview Box */}
+              <div className="md:col-span-1 flex flex-col items-center justify-center p-4 bg-gray-50 rounded-xl border border-dashed border-gray-300 min-h-[160px]">
+                {selectedSubject.coverImageUrl ? (
+                  <div className="relative group w-full h-36 rounded-lg overflow-hidden border border-gray-200 bg-white">
+                    <img 
+                      src={selectedSubject.coverImageUrl} 
+                      alt={selectedSubject.name} 
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      <a 
+                        href={selectedSubject.coverImageUrl} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="p-2 bg-white text-gray-800 rounded-full hover:bg-gray-100 shadow"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center text-gray-400 space-y-2 py-4">
+                    <ImageIcon className="w-12 h-12 mx-auto text-gray-300" />
+                    <p className="text-xs font-medium">لا توجد صورة مخصصة (يتم استخدام مظهر الغلاف الافتراضي)</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Upload Actions */}
+              <div className="md:col-span-2 space-y-3">
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handleImageFileSelected} 
+                  accept="image/jpeg,image/png,image/webp" 
+                  className="hidden" 
+                />
+
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploadingImage}
+                    className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow-sm transition disabled:opacity-50"
+                  >
+                    {isUploadingImage ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4" />
+                    )}
+                    {selectedSubject.coverImageUrl ? "تغيير صورة الغلاف" : "رفع صورة الغلاف"}
+                  </button>
+
+                  {selectedSubject.coverImageUrl && (
+                    <button
+                      type="button"
+                      onClick={handleDeleteSubjectImage}
+                      disabled={isUploadingImage}
+                      className="px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold rounded-xl flex items-center gap-1.5 transition disabled:opacity-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      حذف الصورة
+                    </button>
+                  )}
+                </div>
+
+                <p className="text-xs text-gray-500">
+                  الصيغ المدعومة: <strong>JPG, PNG, WEBP</strong> • الحد الأقصى للحجم: <strong>5 ميغابايت</strong>.
+                </p>
+              </div>
+            </div>
+          </div>
         )}
 
       </main>

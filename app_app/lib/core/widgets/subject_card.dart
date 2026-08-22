@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../app/theme/design_tokens.dart';
 
 class SubjectCard extends StatelessWidget {
   final String subjectId;
@@ -12,6 +11,7 @@ class SubjectCard extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback? onFavoriteTap;
   final String? bannerAsset;
+  final String? coverImageUrl;
 
   const SubjectCard({
     super.key,
@@ -25,6 +25,7 @@ class SubjectCard extends StatelessWidget {
     required this.onTap,
     this.onFavoriteTap,
     this.bannerAsset,
+    this.coverImageUrl,
   });
 
   String _getSubjectBanner(String id) {
@@ -44,9 +45,75 @@ class SubjectCard extends StatelessWidget {
     }
   }
 
+  Widget _buildSubjectImage() {
+    if (coverImageUrl != null && coverImageUrl!.trim().isNotEmpty) {
+      String url = coverImageUrl!.trim();
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        const apiBase = String.fromEnvironment(
+          'API_BASE_URL',
+          defaultValue: 'http://2.24.141.70:3001/api/v1',
+        );
+        final base = apiBase.replaceAll('/api/v1', '');
+        url = '$base$url';
+      }
+
+      return Image.network(
+        url,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            color: const Color(0xFFF1F5F9),
+            child: const Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) => _buildFallbackImage(),
+      );
+    }
+
+    if (bannerAsset != null && bannerAsset!.isNotEmpty) {
+      return Image.asset(
+        bannerAsset!,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => _buildFallbackImage(),
+      );
+    }
+
+    final defaultBanner = _getSubjectBanner(subjectId);
+    return Image.asset(
+      defaultBanner,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) => _buildFallbackImage(),
+    );
+  }
+
+  Widget _buildFallbackImage() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFFE0F2FE), Color(0xFFBAE6FD)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: const Center(
+        child: Icon(
+          Icons.menu_book_rounded,
+          color: Color(0xFF0284C7),
+          size: 40,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final banner = bannerAsset ?? _getSubjectBanner(subjectId);
     final progressPct = (progress * 100).toInt();
     final masteryPct = (mastery * 100).toInt();
 
@@ -60,7 +127,7 @@ class SubjectCard extends StatelessWidget {
           border: Border.all(color: const Color(0xFFF1F5F9), width: 1),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF0F172A).withOpacity(0.04),
+              color: const Color(0xFF0F172A).withValues(alpha: 0.04),
               blurRadius: 14,
               offset: const Offset(0, 4),
             ),
@@ -257,18 +324,7 @@ class SubjectCard extends StatelessWidget {
                     child: SizedBox(
                       width: 130,
                       height: double.infinity,
-                      child: Image.asset(
-                        banner,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(
-                          color: const Color(0xFFE0F2FE),
-                          child: const Icon(
-                            Icons.school_rounded,
-                            color: Color(0xFF0EA5E9),
-                            size: 40,
-                          ),
-                        ),
-                      ),
+                      child: _buildSubjectImage(),
                     ),
                   ),
                 ],

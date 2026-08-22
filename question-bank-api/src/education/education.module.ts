@@ -6,6 +6,7 @@ import { EducationController } from './education.controller';
 import { GradesService } from './grades/grades.service';
 import { LessonsController } from './lessons/lessons.controller';
 import { LessonsService } from './lessons/lessons.service';
+import { SubjectImageService } from './subjects/subject-image.service';
 import { SubjectsController } from './subjects/subjects.controller';
 import { SubjectsService } from './subjects/subjects.service';
 import { UnitsController } from './units/units.controller';
@@ -24,9 +25,10 @@ import { UnitsService } from './units/units.service';
     GradesService,
     CurriculaService,
     SubjectsService,
+    SubjectImageService,
     UnitsService,
     LessonsService,
   ],
-  exports: [SubjectsService, UnitsService, LessonsService],
+  exports: [SubjectsService, SubjectImageService, UnitsService, LessonsService],
 })
 export class EducationModule {}

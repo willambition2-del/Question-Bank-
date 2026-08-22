@@ -25,16 +25,18 @@ export class StudyResourcesController {
   constructor(private readonly studyResourcesService: StudyResourcesService) {}
 
   @Get('subjects')
-  getSubjectsWithResources(@CurrentUser() currentUser?: AuthenticatedUser) {
-    return this.studyResourcesService.getSubjectsWithResources(currentUser?.userId);
+  async getSubjectsWithResources(@CurrentUser() currentUser?: AuthenticatedUser) {
+    const data = await this.studyResourcesService.getSubjectsWithResources(currentUser?.userId);
+    return { data };
   }
 
   @Get('subjects/:subjectId/resources')
-  getResourcesBySubject(
+  async getResourcesBySubject(
     @Param('subjectId') subjectId: string,
     @CurrentUser() currentUser?: AuthenticatedUser,
   ) {
-    return this.studyResourcesService.getResourcesBySubject(subjectId, currentUser?.userId);
+    const data = await this.studyResourcesService.getResourcesBySubject(subjectId, currentUser?.userId);
+    return { data };
   }
 
   @Get(':id/download')

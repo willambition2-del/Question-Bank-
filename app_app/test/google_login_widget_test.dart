@@ -29,7 +29,7 @@ void main() {
 
       expect(find.byKey(const Key('google-sign-in-button')), findsOneWidget);
       expect(find.text('المتابعة باستخدام Google'), findsOneWidget);
-      expect(find.text('اسم المستخدم أو رقم الهاتف'), findsOneWidget);
+      expect(find.text('البريد الإلكتروني'), findsOneWidget);
       expect(find.text('كلمة المرور'), findsOneWidget);
       expect(
         Directionality.of(
@@ -71,10 +71,10 @@ void main() {
     expect(find.text('المتابعة باستخدام Google'), findsOneWidget);
   });
 
-  testWidgets('routes a new Google user to onboarding', (tester) async {
+  testWidgets('routes a Google user with incomplete profile to complete-profile', (tester) async {
     await _pumpLogin(
       tester,
-      repository: _WidgetAuthRepository(isNewUser: true),
+      repository: _WidgetAuthRepository(student: _incompleteStudent),
       gateway: _WidgetGoogleGateway(const GoogleIdentityToken('token')),
     );
 
@@ -83,13 +83,13 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    expect(find.text('onboarding-page'), findsOneWidget);
+    expect(find.text('complete-profile-page'), findsOneWidget);
   });
 
-  testWidgets('routes a returning Google user to home', (tester) async {
+  testWidgets('routes a returning Google user with complete profile to home', (tester) async {
     await _pumpLogin(
       tester,
-      repository: _WidgetAuthRepository(isNewUser: false),
+      repository: _WidgetAuthRepository(student: _completeStudent),
       gateway: _WidgetGoogleGateway(const GoogleIdentityToken('token')),
     );
 
@@ -112,6 +112,10 @@ Future<void> _pumpLogin(
     routes: [
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       GoRoute(path: '/home', builder: (_, _) => const Text('home-page')),
+      GoRoute(
+        path: '/complete-profile',
+        builder: (_, _) => const Text('complete-profile-page'),
+      ),
       GoRoute(
         path: '/onboarding',
         builder: (_, _) => const Text('onboarding-page'),
@@ -141,13 +145,34 @@ Future<void> _pumpLogin(
   await tester.pump(const Duration(seconds: 1));
 }
 
-const _widgetStudent = StudentModel(
+const _incompleteStudent = StudentModel(
   id: 'user-1',
   name: 'Google Student',
   username: 'google.student',
   phone: '',
   email: 'student@example.com',
   schoolName: '',
+  governorate: null,
+  gradeLevel: 'THIRD_SECONDARY',
+  onboardingCompleted: false,
+  level: 1,
+  points: 0,
+  rank: 0,
+  streakDays: 0,
+  completedQuestions: 0,
+  overallAccuracy: 0,
+);
+
+const _completeStudent = StudentModel(
+  id: 'user-1',
+  name: 'Google Student',
+  username: 'google.student',
+  phone: '777123456',
+  email: 'student@example.com',
+  schoolName: 'ثانوية الكويت',
+  governorate: 'أمانة العاصمة',
+  gradeLevel: 'THIRD_SECONDARY',
+  onboardingCompleted: true,
   level: 1,
   points: 0,
   rank: 0,
@@ -157,15 +182,16 @@ const _widgetStudent = StudentModel(
 );
 
 final class _WidgetAuthRepository extends Fake implements AuthRepository {
+  final StudentModel student;
   final bool isNewUser;
-  _WidgetAuthRepository({this.isNewUser = false});
+  _WidgetAuthRepository({this.student = _incompleteStudent, this.isNewUser = false});
 
   @override
   Future<StudentModel?> getLoggedInStudent() async => null;
 
   @override
   Future<GoogleAuthSession> loginWithGoogle(String idToken) async {
-    return GoogleAuthSession(user: _widgetStudent, isNewUser: isNewUser);
+    return GoogleAuthSession(user: student, isNewUser: isNewUser);
   }
 }
 

@@ -48,7 +48,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     if (mounted) {
       if (success) {
-        context.go('/home');
+        final user = ref.read(authProvider);
+        if (user != null && !user.onboardingCompleted) {
+          context.go('/complete-profile');
+        } else {
+          context.go('/home');
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -71,7 +76,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     if (outcome.cancelled) return;
     if (outcome.succeeded) {
-      context.go(outcome.isNewUser ? '/onboarding' : '/home');
+      final user = ref.read(authProvider);
+      if (user != null && !user.onboardingCompleted) {
+        context.go('/complete-profile');
+      } else {
+        context.go('/home');
+      }
       return;
     }
     ScaffoldMessenger.of(context).showSnackBar(

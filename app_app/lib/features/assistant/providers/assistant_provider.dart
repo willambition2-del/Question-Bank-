@@ -72,8 +72,12 @@ final class AssistantState {
 }
 
 final class AssistantNotifier extends Notifier<AssistantState> {
+  bool _disposed = false;
+
   @override
   AssistantState build() {
+    _disposed = false;
+    ref.onDispose(() => _disposed = true);
     Future.microtask(loadUsage);
     return const AssistantState();
   }
@@ -82,9 +86,12 @@ final class AssistantNotifier extends Notifier<AssistantState> {
     state = state.copyWith(isLoadingUsage: true);
     try {
       final usage = await ref.read(assistantRepositoryProvider).getUsage();
+      if (_disposed) return;
       state = state.copyWith(usage: usage, isLoadingUsage: false);
     } catch (_) {
-      state = state.copyWith(isLoadingUsage: false);
+      if (!_disposed) {
+        state = state.copyWith(isLoadingUsage: false);
+      }
     }
   }
 

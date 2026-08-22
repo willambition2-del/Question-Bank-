@@ -7,6 +7,7 @@ import type { Prisma } from '../../generated/prisma/client';
 import {
   ProviderCredentialAuditAction,
   ServiceHealthStatus,
+  ServiceProviderType,
   ServiceRequestStatus,
   ServiceTaskType,
 } from '../../generated/prisma/enums';
@@ -16,6 +17,10 @@ import { KnowledgeBaseService } from '../knowledge/knowledge-base.service';
 import { DocumentIngestionService } from '../knowledge/document-ingestion.service';
 import { KnowledgeRetrievalService } from '../knowledge/knowledge-retrieval.service';
 import { VectorExtensionService } from '../knowledge/vector-extension.service';
+import {
+  CURATED_NVIDIA_MODELS,
+  NvidiaModelCatalogItem,
+} from '../providers/nvidia-compatible.adapter';
 import type { ProviderConfiguration } from '../providers/provider-adapter';
 import { ProviderAdapterRegistry } from '../providers/provider-adapter.registry';
 import { ProviderUrlSecurityService } from '../providers/provider-url-security.service';
@@ -240,6 +245,198 @@ export class IntelligentServicesAdminService {
         code: 'MODEL_DISCOVERY_FAILED',
         message: 'Model discovery failed',
       });
+    }
+  }
+
+  async getNvidiaConfig() {
+    const nvidia = await this.assistantSettingsService.ensureNvidiaProvider();
+    return {
+      providerId: nvidia.id,
+      key: nvidia.key,
+      displayNameInternal: nvidia.displayNameInternal,
+      baseUrl: nvidia.baseUrl,
+      enabled: nvidia.enabled,
+      apiKeyConfigured: Boolean(nvidia.encryptedApiKey),
+      secretLastFour: nvidia.secretLastFour,
+      models: nvidia.models.map((m) => ({
+        id: m.id,
+        remoteModelId: m.remoteModelId,
+        internalName: m.internalName,
+        enabled: m.enabled,
+      })),
+    };
+  }
+
+  async updateNvidiaConfig(
+    actorId: string,
+    dto: {
+      apiKey?: string;
+      baseUrl?: string;
+      enabled?: boolean;
+      removeApiKey?: boolean;
+    },
+  ) {
+    const nvidia = await this.assistantSettingsService.ensureNvidiaProvider();
+    if (dto.baseUrl) await this.urls.assertAllowed(dto.baseUrl);
+    const apiKey = dto.apiKey?.trim();
+
+    await this.prisma.serviceProvider.update({
+      where: { id: nvidia.id },
+      data: {
+        baseUrl: dto.baseUrl,
+        encryptedApiKey: dto.removeApiKey
+          ? null
+          : apiKey
+            ? this.encryption.encrypt(apiKey)
+            : undefined,
+        secretLastFour: dto.removeApiKey
+          ? null
+          : apiKey
+            ? apiKey.slice(-4)
+            : undefined,
+        enabled: dto.enabled,
+        healthStatus:
+          dto.enabled === false ? ServiceHealthStatus.DISABLED : undefined,
+        updatedById: actorId,
+      },
+    });
+
+    if (apiKey || dto.removeApiKey) {
+      await this.credentialAudit(
+        nvidia.id,
+        actorId,
+        dto.removeApiKey
+          ? ProviderCredentialAuditAction.DISABLED
+          : ProviderCredentialAuditAction.REPLACED,
+        apiKey?.slice(-4),
+        true,
+      );
+    }
+
+    return this.getNvidiaConfig();
+  }
+
+  async discoverNvidiaModels() {
+    const nvidia = await this.assistantSettingsService.ensureNvidiaProvider();
+    let remoteModels: string[] = [];
+    if (nvidia.encryptedApiKey) {
+      try {
+        const adapter = this.adapters.get(ServiceProviderType.NVIDIA);
+        remoteModels = await adapter.listModels(
+          this.providerConfiguration(nvidia),
+        );
+      } catch {
+        // Use catalog fallback
+      }
+    }
+
+    const catalogMap = new Map<string, NvidiaModelCatalogItem>();
+    for (const item of CURATED_NVIDIA_MODELS) {
+      catalogMap.set(item.id, item);
+    }
+    for (const id of remoteModels) {
+      if (!catalogMap.has(id)) {
+        catalogMap.set(id, {
+          id,
+          name: id.split('/').pop() || id,
+          publisher: id.split('/')[0] || 'NVIDIA',
+          isFree: true,
+          contextWindow: 131072,
+          supportsVision: false,
+          description: 'نموذج مستضاف على منصة NVIDIA API Catalog.',
+        });
+      }
+    }
+
+    return {
+      providerId: nvidia.id,
+      models: Array.from(catalogMap.values()),
+    };
+  }
+
+  async testNvidiaModel(actorId: string, modelId: string) {
+    const nvidia = await this.assistantSettingsService.ensureNvidiaProvider();
+    if (!nvidia.encryptedApiKey) {
+      return {
+        status: 'Unauthorized',
+        message: 'مفتاح NVIDIA API غير مدخل. يرجى إدخال وحفظ المفتاح أولاً.',
+        latencyMs: 0,
+      };
+    }
+
+    let model = await this.prisma.serviceModel.findFirst({
+      where: {
+        providerId: nvidia.id,
+        OR: [{ id: modelId }, { remoteModelId: modelId }],
+      },
+    });
+
+    if (!model) {
+      model = await this.prisma.serviceModel.create({
+        data: {
+          providerId: nvidia.id,
+          internalName: modelId.split('/').pop() || modelId,
+          remoteModelId: modelId,
+          enabled: true,
+          supportsText: true,
+        },
+      });
+    }
+
+    const startTime = Date.now();
+    try {
+      const adapter = this.adapters.get(ServiceProviderType.NVIDIA);
+      await adapter.testConnection(this.providerConfiguration(nvidia), model);
+      const latencyMs = Date.now() - startTime;
+      await this.setHealth(nvidia.id, model.id, true);
+      await this.credentialAudit(
+        nvidia.id,
+        actorId,
+        ProviderCredentialAuditAction.TEST_SUCCEEDED,
+        nvidia.secretLastFour ?? undefined,
+        true,
+      );
+      return {
+        status: 'Working',
+        message: 'النموذج متصل ويعمل بنجاح!',
+        latencyMs,
+      };
+    } catch (error: any) {
+      const latencyMs = Date.now() - startTime;
+      await this.setHealth(nvidia.id, model.id, false);
+      const status = error?.status || error?.statusCode || 0;
+      let resultStatus = 'Unavailable';
+      let message = 'تعذر الاتصال بالنموذج حالياً.';
+
+      if (
+        status === 401 ||
+        status === 403 ||
+        error?.kind === 'AUTHENTICATION'
+      ) {
+        resultStatus = 'Unauthorized';
+        message = 'مفتاح NVIDIA API غير صالح أو غير مصرح به (401/403).';
+      } else if (status === 404) {
+        resultStatus = 'Model not found';
+        message = 'النموذج غير متاح على خوادم NVIDIA API (404).';
+      } else if (status === 429 || error?.kind === 'RATE_LIMIT') {
+        resultStatus = 'Rate limited';
+        message = 'تم تجاوز حد الطلبات للنموذج على NVIDIA API (429).';
+      }
+
+      await this.credentialAudit(
+        nvidia.id,
+        actorId,
+        ProviderCredentialAuditAction.TEST_FAILED,
+        nvidia.secretLastFour ?? undefined,
+        false,
+        resultStatus,
+      );
+
+      return {
+        status: resultStatus,
+        message,
+        latencyMs,
+      };
     }
   }
 

@@ -1,0 +1,17 @@
+enum CharacterEmotion {
+  welcome,
+  motivate,
+  streak,
+  fastCorrect,
+  correct,
+  support,
+  excellentResult,
+  mediumResult,
+  weakResult,
+  waiting,
+  readyForChallenge,
+  victory,
+  defeatSportsmanship,
+  hint,
+  weaknessReview,
+}

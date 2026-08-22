@@ -196,16 +196,27 @@ final class AuthApiRepository implements AuthRepository {
 
   StudentModel _studentFromJson(Map<String, dynamic> json) {
     final backendId = json['id']?.toString() ?? '';
+    final schoolName = json['schoolName']?.toString().trim() ?? '';
+    final governorate = json['governorate']?.toString().trim();
+    final gradeLevel = json['gradeLevel']?.toString().trim();
+    final bool rawOnboarding = json['onboardingCompleted'] == true;
+    final bool isComplete = rawOnboarding &&
+        schoolName.isNotEmpty &&
+        governorate != null &&
+        governorate.isNotEmpty &&
+        gradeLevel != null &&
+        gradeLevel.isNotEmpty;
+
     return StudentModel(
       id: backendId,
       name: json['name']?.toString() ?? '',
       username: json['username']?.toString() ?? '',
       phone: json['phone']?.toString() ?? '',
       email: json['email']?.toString(),
-      schoolName: json['schoolName']?.toString() ?? '',
-      governorate: json['governorate']?.toString(),
-      gradeLevel: json['gradeLevel']?.toString() ?? 'THIRD_SECONDARY',
-      onboardingCompleted: json['onboardingCompleted'] == true,
+      schoolName: schoolName,
+      governorate: governorate,
+      gradeLevel: gradeLevel ?? 'THIRD_SECONDARY',
+      onboardingCompleted: isComplete,
       level: 1,
       points: 0,
       rank: 0,

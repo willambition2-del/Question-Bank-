@@ -301,21 +301,24 @@ class ChallengesScreen extends ConsumerWidget {
                           children: page.items
                               .map(
                                 (challenge) => AppCard(
-                                  child: ListTile(
-                                    leading: const Icon(
-                                      Icons.mail_outline_rounded,
-                                      color: AppColors.warmOrange,
-                                    ),
-                                    title: Text(_modeLabel(challenge.mode)),
-                                    subtitle: Text(
-                                      '${challenge.questionCount} أسئلة',
-                                    ),
-                                    trailing: PrimaryButton(
-                                      height: 34,
-                                      width: 75,
-                                      text: 'فتح',
-                                      onPressed: () => context.push(
-                                        '/challenges/waiting?mode=${challenge.mode == ChallengeMode.twoVsTwo ? 'twoVsTwo' : 'oneVsOne'}&challengeId=${challenge.id}',
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: ListTile(
+                                      leading: const Icon(
+                                        Icons.mail_outline_rounded,
+                                        color: AppColors.warmOrange,
+                                      ),
+                                      title: Text(_modeLabel(challenge.mode)),
+                                      subtitle: Text(
+                                        '${challenge.questionCount} أسئلة',
+                                      ),
+                                      trailing: PrimaryButton(
+                                        height: 34,
+                                        width: 75,
+                                        text: 'فتح',
+                                        onPressed: () => context.push(
+                                          '/challenges/waiting?mode=${challenge.mode == ChallengeMode.twoVsTwo ? 'twoVsTwo' : 'oneVsOne'}&challengeId=${challenge.id}',
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -381,13 +384,14 @@ class ChallengesScreen extends ConsumerWidget {
   ) {
     return AppCard(
       onTap: onTap,
-      padding: const EdgeInsets.all(AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(height: 4),
+          Icon(icon, color: color, size: 22),
+          const SizedBox(height: 2),
           Text(
             title,
             style: AppTypography.cardTitle.copyWith(

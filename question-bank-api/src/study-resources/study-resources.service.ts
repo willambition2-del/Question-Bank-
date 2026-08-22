@@ -50,16 +50,15 @@ export class StudyResourcesService {
       where: {
         isActive: true,
         isPublished: true,
+        deletedAt: null,
         grade: { isActive: true, deletedAt: null, code: userGrade },
-        studyResources: {
-          some: { isPublished: true },
-        },
       },
       select: {
         id: true,
         name: true,
         iconKey: true,
         colorHex: true,
+        coverImageUrl: true,
       },
       orderBy: { sortOrder: 'asc' },
     });

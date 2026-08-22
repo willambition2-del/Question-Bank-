@@ -159,6 +159,12 @@ export class CreateSubjectDto {
   @IsHexColor()
   colorHex?: string;
 
+  @ApiPropertyOptional({ example: 'https://example.com/cover.jpg' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  coverImageUrl?: string;
+
   @ApiPropertyOptional({ default: 0 })
   @IsOptional()
   @Type(() => Number)

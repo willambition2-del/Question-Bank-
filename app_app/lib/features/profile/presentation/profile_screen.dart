@@ -260,15 +260,18 @@ class ProfileScreen extends ConsumerWidget {
     required String subtitle,
     required VoidCallback onTap,
   }) {
-    return ListTile(
-      onTap: onTap,
-      leading: Icon(icon, color: AppColors.primaryBlue),
-      title: Text(title, style: AppTypography.cardTitle.copyWith(fontSize: 14)),
-      subtitle: Text(subtitle, style: AppTypography.caption),
-      trailing: const Icon(
-        Icons.arrow_forward_ios_rounded,
-        size: 14,
-        color: AppColors.secondaryText,
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
+        onTap: onTap,
+        leading: Icon(icon, color: AppColors.primaryBlue),
+        title: Text(title, style: AppTypography.cardTitle.copyWith(fontSize: 14)),
+        subtitle: Text(subtitle, style: AppTypography.caption),
+        trailing: const Icon(
+          Icons.arrow_forward_ios_rounded,
+          size: 14,
+          color: AppColors.secondaryText,
+        ),
       ),
     );
   }

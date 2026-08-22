@@ -68,7 +68,7 @@ export class IntelligentServicesGateway {
   async createEmbeddings(
     request: GatewayEmbeddingRequest,
   ): Promise<GatewayEmbeddingResponse> {
-    if (!this.config.get<boolean>('INTELLIGENT_SERVICES_ENABLED', false)) {
+    if (this.config.get<string | boolean>('INTELLIGENT_SERVICES_ENABLED') === false || this.config.get<string | boolean>('INTELLIGENT_SERVICES_ENABLED') === 'false') {
       throw this.unavailable('INTELLIGENT_SERVICES_DISABLED');
     }
     const startedAt = Date.now();
@@ -169,7 +169,7 @@ export class IntelligentServicesGateway {
     }
   }
   async execute(request: GatewayRequest): Promise<GatewayResponse> {
-    if (!this.config.get<boolean>('INTELLIGENT_SERVICES_ENABLED', false)) {
+    if (this.config.get<string | boolean>('INTELLIGENT_SERVICES_ENABLED') === false || this.config.get<string | boolean>('INTELLIGENT_SERVICES_ENABLED') === 'false') {
       throw this.unavailable('INTELLIGENT_SERVICES_DISABLED');
     }
     const startedAt = Date.now();

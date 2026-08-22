@@ -8,10 +8,14 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBearerAuth,
   ApiConflictResponse,
+  ApiConsumes,
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
@@ -38,6 +42,10 @@ import {
 } from '../dto/education.dto';
 import { GradesService } from '../grades/grades.service';
 import { LessonsService } from '../lessons/lessons.service';
+import {
+  SubjectImageService,
+  type UploadedSubjectImageFile,
+} from '../subjects/subject-image.service';
 import { SubjectsService } from '../subjects/subjects.service';
 import { UnitsService } from '../units/units.service';
 
@@ -51,6 +59,7 @@ export class EducationAdminController {
     private readonly grades: GradesService,
     private readonly curricula: CurriculaService,
     private readonly subjects: SubjectsService,
+    private readonly subjectImages: SubjectImageService,
     private readonly units: UnitsService,
     private readonly lessons: LessonsService,
   ) {}
@@ -182,6 +191,27 @@ export class EducationAdminController {
   @ApiOperation({ summary: 'Unpublish a subject' })
   async unpublishSubject(@Param('id', ParseUUIDPipe) id: string) {
     return { data: await this.subjects.unpublish(id) };
+  }
+
+  @Post('subjects/:id/image')
+  @ApiOperation({ summary: 'Upload or update cover image for a subject' })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FileInterceptor('image', {
+      limits: { fileSize: 5 * 1024 * 1024 },
+    }),
+  )
+  async uploadSubjectImage(
+    @Param('id', ParseUUIDPipe) id: string,
+    @UploadedFile() file?: UploadedSubjectImageFile,
+  ) {
+    return { data: await this.subjectImages.uploadCoverImage(id, file) };
+  }
+
+  @Delete('subjects/:id/image')
+  @ApiOperation({ summary: 'Delete cover image for a subject' })
+  async deleteSubjectImage(@Param('id', ParseUUIDPipe) id: string) {
+    return { data: await this.subjectImages.deleteCoverImage(id) };
   }
 
   @Post('units')

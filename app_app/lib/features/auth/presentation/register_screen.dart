@@ -72,7 +72,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     if (mounted) {
       if (success) {
-        context.go('/home');
+        final user = ref.read(authProvider);
+        if (user != null && !user.onboardingCompleted) {
+          context.go('/complete-profile');
+        } else {
+          context.go('/home');
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
