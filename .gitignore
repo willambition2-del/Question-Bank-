@@ -27,6 +27,9 @@ out/
 !backend/prisma/migrations/**/migration.sql
 !question-bank-api/prisma/migrations/**/
 !question-bank-api/prisma/migrations/**/migration.sql
+!data-imports/
+!data-imports/grade9/
+!data-imports/grade9/grade9_question_bank_merged_verified_postgresql.sql
 
 uploads/
 storage/
